@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scanner Codici CSV</title>
+<meta name="description" content="Scansiona codici a barre e QR con la fotocamera ed esportali in un file CSV con quantità.">
+<meta name="theme-color" content="#007aff">
+
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+<!-- Supporto PWA su iOS (Safari non legge tutte le proprietà del manifest) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Scanner CSV">
+<meta name="mobile-web-app-capable" content="yes">
+
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.23.0/umd/index.min.js"></script>
+<style>
+:root{
+  /* Palette in stile iOS (light): sfondo "grouped", card bianche, blu di sistema */
+  --bg:#f2f2f7;
+  --surface:#ffffff;
+  --surface-alt:#eeeef2;
+  --ink:#1c1c1e;
+  --ink-soft:#8a8a8e;
+  --line:#e5e5ea;
+  --accent:#007aff;
+  --accent-ink:#ffffff;
+  --danger:#ff3b30;
+  --danger-ink:#ffffff;
+  --edit:#ff9500;
+  --edit-ink:#ffffff;
+  --key-fill:#e9e9ee;
+  --key-fill-active:#d8d8de;
+  --shadow:0 1px 3px rgba(0,0,0,0.06), 0 1px 1px rgba(0,0,0,0.04);
+  --shadow-lg:0 8px 24px rgba(0,0,0,0.10);
+  --mono: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+  --r-lg:20px;
+  --r-md:14px;
+  --r-sm:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#000000;
+    --surface:#1c1c1e;
+    --surface-alt:#2c2c2e;
+    --ink:#f2f2f7;
+    --ink-soft:#98989d;
+    --line:#38383a;
+    --accent:#0a84ff;
+    --accent-ink:#ffffff;
+    --danger:#ff453a;
+    --danger-ink:#ffffff;
+    --edit:#ff9f0a;
+    --edit-ink:#1c1c1e;
+    --key-fill:#2c2c2e;
+    --key-fill-active:#3a3a3c;
+    --shadow:0 1px 3px rgba(0,0,0,0.5);
+    --shadow-lg:0 8px 24px rgba(0,0,0,0.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#000000;
+  --surface:#1c1c1e;
+  --surface-alt:#2c2c2e;
+  --ink:#f2f2f7;
+  --ink-soft:#98989d;
+  --line:#38383a;
+  --accent:#0a84ff;
+  --accent-ink:#ffffff;
+  --danger:#ff453a;
+  --danger-ink:#ffffff;
+  --edit:#ff9f0a;
+  --edit-ink:#1c1c1e;
+  --key-fill:#2c2c2e;
+  --key-fill-active:#3a3a3c;
+  --shadow:0 1px 3px rgba(0,0,0,0.5);
+  --shadow-lg:0 8px 24px rgba(0,0,0,0.5);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  margin:0;
+  padding-inline:16px;
+  padding-block:24px;
+  padding-top:calc(24px + env(safe-area-inset-top, 0px));
+  padding-bottom:calc(24px + env(safe-area-inset-bottom, 0px));
+  min-height:100%;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-direction:column;gap:4px}
+h1{
+  font-size:1.75rem;
+  font-weight:800;
+  margin:0;
+  letter-spacing:-0.02em;
+  text-wrap:balance;
+}
+.tagline{color:var(--ink-soft);font-size:0.92rem;margin:0;line-height:1.4}
+
+.scanner-card{
+  background:var(--surface);
+  border-radius:var(--r-lg);
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+.video-box{
+  position:relative;
+  width:100%;
+  aspect-ratio:4/3;
+  background:#0a0b08;
+  overflow:hidden;
+}
+video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.reticle{
+  position:absolute;
+  inset:18% 10%;
+  border:2px solid rgba(255,255,255,0.85);
+  border-radius:20px;
+  pointer-events:none;
+  box-shadow:0 0 0 999px rgba(0,0,0,0.28);
+}
+.reticle::before, .reticle::after{
+  content:"";
+  position:absolute;
+  width:22px;height:22px;
+  border-color:var(--accent);
+  border-style:solid;
+}
+.reticle::before{top:-2px;left:-2px;border-width:4px 0 0 4px;border-top-left-radius:14px}
+.reticle::after{bottom:-2px;right:-2px;border-width:0 4px 4px 0;border-bottom-right-radius:14px}
+.scan-line{
+  position:absolute;left:10%;right:10%;top:18%;
+  height:2px;background:var(--accent);
+  box-shadow:0 0 8px var(--accent);
+  animation:sweep 2.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce){.scan-line{animation:none}}
+@keyframes sweep{
+  0%,100%{top:18%}
+  50%{top:80%}
+}
+.video-placeholder{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;color:#c9cabf;text-align:center;padding:20px;
+}
+.video-placeholder svg{opacity:0.6}
+.status-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;padding:12px 16px;border-top:1px solid var(--line);
+  font-size:0.85rem;color:var(--ink-soft);
+}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--ink-soft);flex-shrink:0}
+.status-dot.live{background:#34c759;box-shadow:0 0 0 4px color-mix(in srgb, #34c759 22%, transparent)}
+.status-dot.err{background:var(--danger)}
+.status-left{display:flex;align-items:center;gap:8px;min-width:0}
+.status-left span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.controls{display:flex;gap:10px;flex-wrap:wrap}
+button{
+  font-family:var(--sans);
+  font-size:0.95rem;
+  font-weight:600;
+  border-radius:var(--r-md);
+  padding:12px 20px;
+  border:none;
+  background:var(--surface-alt);
+  color:var(--ink);
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  transition:transform 0.08s ease, background 0.15s ease, opacity 0.15s ease;
+}
+button:active{transform:scale(0.96); opacity:0.85}
+button.primary{background:var(--accent);color:var(--accent-ink)}
+button.danger{background:color-mix(in srgb, var(--danger) 14%, var(--surface-alt));color:var(--danger)}
+button:disabled{opacity:0.4;cursor:not-allowed}
+button:disabled:active{transform:none}
+button svg{flex-shrink:0}
+
+.mode-toggle{
+  display:flex;
+  background:var(--surface-alt);
+  border-radius:var(--r-md);
+  padding:3px;
+  gap:2px;
+}
+.mode-toggle button{
+  flex:1;
+  border:none;
+  border-radius:11px;
+  padding:9px 10px;
+  background:transparent;
+  color:var(--ink-soft);
+  font-weight:600;
+  font-size:0.88rem;
+  justify-content:center;
+  box-shadow:none;
+}
+.mode-toggle button[aria-pressed="true"]{
+  background:var(--surface);
+  color:var(--accent);
+  box-shadow:var(--shadow);
+}
+
+.secondary-row{display:flex;gap:8px;align-items:stretch}
+.edit-standalone{
+  flex:1;
+  background:var(--surface-alt);
+  color:var(--ink-soft);
+  justify-content:center;
+  font-size:0.9rem;
+}
+.edit-standalone[aria-pressed="true"]{
+  background:var(--edit);
+  color:var(--edit-ink);
+}
+.qr-toggle{
+  flex:0 0 auto;
+  width:46px;
+  height:46px;
+  padding:0;
+  justify-content:center;
+  background:var(--surface-alt);
+  color:var(--ink-soft);
+}
+.qr-toggle .qr-slash{opacity:0;transition:opacity 0.15s ease}
+.qr-toggle[aria-pressed="true"]{
+  background:color-mix(in srgb, var(--danger) 16%, var(--surface-alt));
+  color:var(--danger);
+}
+.qr-toggle[aria-pressed="true"] .qr-slash{opacity:1}
+
+.mode-hint{font-size:0.8rem;color:var(--ink-soft);line-height:1.5;margin:0}
+
+.confirm-panel{
+  border-top:1px solid var(--line);
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  background:var(--surface);
+}
+.confirm-panel .cp-code{display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center}
+.confirm-panel .cp-code-label{font-size:0.72rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em}
+.confirm-panel .cp-code-value{
+  display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;
+}
+.confirm-panel .cp-code-value code{
+  font-family:var(--mono);font-size:1.1rem;font-weight:600;word-break:break-all;
+}
+.qty-display-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+.qty-display-label{font-size:0.72rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em}
+.qty-display{
+  font-family:var(--mono);
+  font-variant-numeric:tabular-nums;
+  font-size:2.4rem;
+  font-weight:700;
+  color:var(--ink);
+  min-width:2.2em;
+  text-align:center;
+  padding:2px 10px;
+}
+.keypad{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:12px;
+  max-width:270px;
+  margin:0 auto;
+  width:100%;
+}
+.keypad .kp-key{
+  justify-content:center;
+  align-items:center;
+  font-family:var(--sans);
+  font-size:1.4rem;
+  font-weight:500;
+  padding:0;
+  aspect-ratio:1;
+  width:100%;
+  height:auto;
+  border-radius:50%;
+  background:var(--key-fill);
+  color:var(--ink);
+}
+.keypad .kp-key:active{background:var(--key-fill-active)}
+.keypad .kp-clear{color:var(--danger);font-size:1.05rem;font-weight:600}
+.keypad .kp-back{font-size:1.2rem}
+.confirm-actions{display:flex;gap:10px;flex-wrap:wrap}
+.confirm-actions button{flex:1;justify-content:center;min-width:130px}
+
+.qty-error{
+  font-size:0.8rem;color:var(--danger);min-height:1.1em;margin:0;text-align:center;
+}
+.qty-error:empty{visibility:hidden}
+
+.edit-panel{background:var(--surface)}
+.edit-panel .cp-code-label{color:var(--edit)}
+button.edit-save{background:var(--edit);color:var(--edit-ink)}
+button.ghost{background:var(--surface-alt);color:var(--ink-soft)}
+
+.manual-row{display:flex;gap:8px}
+.manual-row input{
+  flex:1;
+  min-width:0;
+  font-family:var(--sans);
+  font-size:0.95rem;
+  padding:12px 14px;
+  border-radius:var(--r-md);
+  border:none;
+  background:var(--surface);
+  color:var(--ink);
+  box-shadow:var(--shadow);
+}
+.manual-row input::placeholder{color:var(--ink-soft)}
+.manual-row input:focus{outline:2px solid var(--accent);outline-offset:1px}
+
+section.list-card{
+  background:var(--surface);
+  border-radius:var(--r-lg);
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  box-shadow:var(--shadow);
+}
+.list-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.list-head h2{font-size:1.05rem;font-weight:700;margin:0}
+.count-pill{
+  font-family:var(--sans);
+  font-size:0.78rem;
+  font-weight:600;
+  color:var(--ink-soft);
+  background:var(--surface-alt);
+  padding:3px 10px;
+  border-radius:999px;
+}
+.empty-state{
+  color:var(--ink-soft);
+  font-size:0.9rem;
+  padding:24px 8px;
+  text-align:center;
+  background:var(--surface-alt);
+  border-radius:var(--r-md);
+}
+ul.rows{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto}
+li.row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;
+  background:var(--surface-alt);
+  border-radius:var(--r-md);
+  animation:in 0.2s ease;
+}
+@keyframes in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+li.row .idx{font-family:var(--mono);font-size:0.72rem;color:var(--ink-soft);width:1.6em;flex-shrink:0;text-align:right}
+li.row .code{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+li.row .code code{font-family:var(--mono);font-size:0.92rem;word-break:break-all}
+li.row .meta{font-size:0.72rem;color:var(--ink-soft);display:flex;gap:8px;flex-wrap:wrap}
+li.row .fmt-tag{
+  font-family:var(--sans);font-size:0.68rem;font-weight:600;letter-spacing:0.02em;
+  color:var(--accent);background:color-mix(in srgb, var(--accent) 14%, transparent);
+  padding:2px 8px;border-radius:999px;white-space:nowrap;
+}
+li.row .qty{
+  font-family:var(--mono);
+  font-variant-numeric:tabular-nums;
+  font-size:0.9rem;
+  font-weight:700;
+  color:var(--ink);
+  background:var(--surface);
+  min-width:2.4em;
+  text-align:center;
+  padding:5px 8px;
+  border-radius:var(--r-sm);
+  flex-shrink:0;
+}
+li.row .qty.bumped{animation:bump 0.3s ease}
+@keyframes bump{
+  0%{transform:scale(1)}
+  40%{transform:scale(1.25);background:color-mix(in srgb, var(--accent) 30%, transparent);color:var(--accent)}
+  100%{transform:scale(1)}
+}
+li.row .del{
+  background:none;border:none;padding:6px;border-radius:50%;color:var(--ink-soft);
+  font-size:1rem;line-height:1;flex-shrink:0;
+}
+li.row .del:hover{color:var(--danger);background:color-mix(in srgb, var(--danger) 12%, transparent)}
+
+.export-row{display:flex;gap:10px;flex-wrap:wrap}
+
+.toast{
+  position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom, 0px));
+  transform:translateX(-50%) translateY(12px);
+  background:color-mix(in srgb, var(--ink) 88%, transparent);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  color:var(--bg);
+  font-size:0.85rem;font-weight:600;
+  padding:10px 18px;border-radius:999px;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.2s ease, transform 0.2s ease;
+  z-index:20;
+  max-width:calc(100% - 32px);
+  text-align:center;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.hint{font-size:0.78rem;color:var(--ink-soft);line-height:1.5}
+.hint a{color:var(--accent)}
+
+footer{
+  text-align:center;font-size:0.75rem;color:var(--ink-soft);padding-top:4px;
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Scanner Codici CSV</h1>
+    <p class="tagline">Inquadra un codice a barre o QR: viene aggiunto all'elenco, pronto per l'esportazione in CSV. Scegli la modalità di lettura qui sotto.</p>
+  </header>
+
+  <div class="mode-toggle" role="group" aria-label="Modalità di lettura">
+    <button id="modeScannerBtn" type="button" aria-pressed="true">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h7l-1 8 11-14h-7l1-8z"/></svg>
+      Scanner
+    </button>
+    <button id="modeManualBtn" type="button" aria-pressed="false">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
+      Manuale
+    </button>
+  </div>
+
+  <div class="secondary-row">
+    <button id="modeEditBtn" class="edit-standalone" type="button" aria-pressed="false">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Modifica
+    </button>
+    <button id="qrToggleBtn" class="qr-toggle" type="button" aria-pressed="false" aria-label="Disattiva lettura QR code" title="Disattiva lettura QR code">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7" rx="1.2"/>
+        <rect x="14" y="3" width="7" height="7" rx="1.2"/>
+        <rect x="3" y="14" width="7" height="7" rx="1.2"/>
+        <rect x="14" y="14" width="3" height="3" rx="0.6" fill="currentColor" stroke="none"/>
+        <rect x="18.5" y="14" width="2.5" height="2.5" rx="0.5" fill="currentColor" stroke="none"/>
+        <rect x="14" y="18.5" width="2.5" height="2.5" rx="0.5" fill="currentColor" stroke="none"/>
+        <rect x="18" y="18" width="3" height="3" rx="0.6" fill="currentColor" stroke="none"/>
+        <line class="qr-slash" x1="2.5" y1="21.5" x2="21.5" y2="2.5" stroke-linecap="round" stroke-width="2.5"/>
+      </svg>
+    </button>
+  </div>
+
+  <p id="modeHint" class="mode-hint">Modalità Scanner: ogni codice letto viene aggiunto (o conteggiato) subito e la fotocamera resta pronta per la lettura successiva.</p>
+
+  <div class="scanner-card">
+    <div class="video-box">
+      <video id="video" playsinline muted></video>
+      <div id="reticle" class="reticle" hidden><div class="scan-line"></div></div>
+      <div id="placeholder" class="video-placeholder">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg>
+        <span>Fotocamera non attiva</span>
+      </div>
+    </div>
+    <div id="confirmPanel" class="confirm-panel" hidden>
+      <div class="cp-code">
+        <span class="cp-code-label">Codice letto — in attesa di conferma</span>
+        <div class="cp-code-value">
+          <code id="confirmCode"></code>
+          <span id="confirmFmt" class="fmt-tag"></span>
+        </div>
+      </div>
+      <div class="qty-display-wrap">
+        <span class="qty-display-label">Quantità</span>
+        <div id="confirmQtyDisplay" class="qty-display" aria-live="polite">1</div>
+      </div>
+      <div id="confirmKeypad" class="keypad" role="group" aria-label="Tastierino quantità">
+        <button type="button" class="kp-key" data-digit="1">1</button>
+        <button type="button" class="kp-key" data-digit="2">2</button>
+        <button type="button" class="kp-key" data-digit="3">3</button>
+        <button type="button" class="kp-key" data-digit="4">4</button>
+        <button type="button" class="kp-key" data-digit="5">5</button>
+        <button type="button" class="kp-key" data-digit="6">6</button>
+        <button type="button" class="kp-key" data-digit="7">7</button>
+        <button type="button" class="kp-key" data-digit="8">8</button>
+        <button type="button" class="kp-key" data-digit="9">9</button>
+        <button type="button" class="kp-key kp-clear" data-action="clear">C</button>
+        <button type="button" class="kp-key" data-digit="0">0</button>
+        <button type="button" class="kp-key kp-back" data-action="back" aria-label="Cancella cifra">⌫</button>
+      </div>
+      <p id="confirmQtyError" class="qty-error" role="alert"></p>
+      <div class="confirm-actions">
+        <button id="confirmAddBtn" class="primary" type="button">Conferma e aggiungi</button>
+        <button id="confirmCancelBtn" class="danger" type="button">Scarta</button>
+      </div>
+    </div>
+    <div id="editPanel" class="confirm-panel edit-panel" hidden>
+      <div class="cp-code">
+        <span class="cp-code-label">Codice trovato — modifica in corso</span>
+        <div class="cp-code-value">
+          <code id="editCode"></code>
+          <span id="editFmt" class="fmt-tag"></span>
+        </div>
+      </div>
+      <div class="qty-display-wrap">
+        <span class="qty-display-label">Nuova quantità</span>
+        <div id="editQtyDisplay" class="qty-display" aria-live="polite">1</div>
+      </div>
+      <div id="editKeypad" class="keypad" role="group" aria-label="Tastierino quantità">
+        <button type="button" class="kp-key" data-digit="1">1</button>
+        <button type="button" class="kp-key" data-digit="2">2</button>
+        <button type="button" class="kp-key" data-digit="3">3</button>
+        <button type="button" class="kp-key" data-digit="4">4</button>
+        <button type="button" class="kp-key" data-digit="5">5</button>
+        <button type="button" class="kp-key" data-digit="6">6</button>
+        <button type="button" class="kp-key" data-digit="7">7</button>
+        <button type="button" class="kp-key" data-digit="8">8</button>
+        <button type="button" class="kp-key" data-digit="9">9</button>
+        <button type="button" class="kp-key kp-clear" data-action="clear">C</button>
+        <button type="button" class="kp-key" data-digit="0">0</button>
+        <button type="button" class="kp-key kp-back" data-action="back" aria-label="Cancella cifra">⌫</button>
+      </div>
+      <p id="editQtyError" class="qty-error" role="alert"></p>
+      <div class="confirm-actions">
+        <button id="editSaveBtn" class="edit-save" type="button">Salva quantità</button>
+        <button id="editDeleteBtn" class="danger" type="button">Elimina dall'elenco</button>
+        <button id="editCancelBtn" class="ghost" type="button">Annulla</button>
+      </div>
+    </div>
+    <div class="status-bar">
+      <div class="status-left">
+        <span id="statusDot" class="status-dot"></span>
+        <span id="statusText">Fotocamera spenta</span>
+      </div>
+      <span id="fps" style="font-family:var(--mono)"></span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="toggleBtn" class="primary" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+      Avvia fotocamera
+    </button>
+    <button id="switchCamBtn" type="button" hidden>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      Cambia fotocamera
+    </button>
+    <button id="torchBtn" type="button" hidden>Flash</button>
+  </div>
+
+  <div class="manual-row">
+    <input id="manualInput" type="text" inputmode="text" placeholder="Oppure inserisci un codice manualmente" aria-label="Inserisci codice manualmente">
+    <button id="manualAddBtn" type="button">Aggiungi</button>
+  </div>
+
+  <section class="list-card">
+    <div class="list-head">
+      <h2>Codici raccolti</h2>
+      <span id="countPill" class="count-pill">0</span>
+    </div>
+    <div id="emptyState" class="empty-state">Nessun codice ancora. Avvia la fotocamera e inquadra un codice a barre.</div>
+    <ul id="rows" class="rows" hidden></ul>
+    <div class="export-row">
+      <button id="exportBtn" class="primary" type="button" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Esporta CSV
+      </button>
+      <button id="clearBtn" class="danger" type="button" disabled>Svuota elenco</button>
+    </div>
+  </section>
+
+  <p class="hint">Il file CSV viene scaricato direttamente sul dispositivo (colonne: codice, quantità, formato, prima lettura, ultima lettura). Rileggendo lo stesso codice la quantità aumenta invece di creare una riga duplicata. Per installarla come app: sul telefono apri il menu del browser e scegli "Aggiungi a schermata Home" / "Installa app".</p>
+
+  <footer>Funziona interamente nel browser: nessun codice viene inviato altrove.</footer>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var video = document.getElementById('video');
+  var placeholder = document.getElementById('placeholder');
+  var reticle = document.getElementById('reticle');
+  var statusDot = document.getElementById('statusDot');
+  var statusText = document.getElementById('statusText');
+  var fpsEl = document.getElementById('fps');
+  var toggleBtn = document.getElementById('toggleBtn');
+  var switchCamBtn = document.getElementById('switchCamBtn');
+  var torchBtn = document.getElementById('torchBtn');
+  var manualInput = document.getElementById('manualInput');
+  var manualAddBtn = document.getElementById('manualAddBtn');
+  var rowsEl = document.getElementById('rows');
+  var emptyState = document.getElementById('emptyState');
+  var countPill = document.getElementById('countPill');
+  var exportBtn = document.getElementById('exportBtn');
+  var clearBtn = document.getElementById('clearBtn');
+  var toast = document.getElementById('toast');
+  var modeScannerBtn = document.getElementById('modeScannerBtn');
+  var modeManualBtn = document.getElementById('modeManualBtn');
+  var modeEditBtn = document.getElementById('modeEditBtn');
+  var qrToggleBtn = document.getElementById('qrToggleBtn');
+  var modeHint = document.getElementById('modeHint');
+  var confirmPanel = document.getElementById('confirmPanel');
+  var confirmCode = document.getElementById('confirmCode');
+  var confirmFmt = document.getElementById('confirmFmt');
+  var confirmQtyDisplay = document.getElementById('confirmQtyDisplay');
+  var confirmKeypad = document.getElementById('confirmKeypad');
+  var confirmQtyError = document.getElementById('confirmQtyError');
+  var confirmAddBtn = document.getElementById('confirmAddBtn');
+  var confirmCancelBtn = document.getElementById('confirmCancelBtn');
+  var editPanel = document.getElementById('editPanel');
+  var editCode = document.getElementById('editCode');
+  var editFmt = document.getElementById('editFmt');
+  var editQtyDisplay = document.getElementById('editQtyDisplay');
+  var editKeypad = document.getElementById('editKeypad');
+  var editQtyError = document.getElementById('editQtyError');
+  var editSaveBtn = document.getElementById('editSaveBtn');
+  var editDeleteBtn = document.getElementById('editDeleteBtn');
+  var editCancelBtn = document.getElementById('editCancelBtn');
+
+  var codes = [];          // {code, format, qty, firstTs, lastTs}
+  var seen = Object.create(null); // code -> entry (same object as in codes)
+  var scanning = false;
+  var stream = null;
+  var codeReader = null;
+  var currentDeviceId = null;
+  var videoDevices = [];
+  var torchOn = false;
+  var toastTimer = null;
+
+  var mode = 'scanner';           // 'scanner' | 'manuale' | 'modifica'
+  var previousMode = 'scanner';   // modalità a cui tornare dopo una modifica confermata
+  var pendingScan = null;         // {code, format} awaiting confirmation in modalità manuale
+  var pendingEdit = null;         // entry in codes[] in fase di modifica
+  var scannerCooldownUntil = 0;   // throttle for modalità scanner
+  var editCooldownUntil = 0;      // throttle for modalità modifica (evita riletture accidentali)
+  var SCANNER_COOLDOWN_MS = 1300;
+  var EDIT_COOLDOWN_MS = 1300;
+
+  var MODE_HINTS = {
+    scanner: 'Modalità Scanner: ogni codice letto viene aggiunto (o conteggiato) subito e la fotocamera resta pronta per la lettura successiva.',
+    manuale: 'Modalità Manuale: dopo la lettura la fotocamera si mette in pausa; conferma la quantità per aggiungerla all\'elenco, poi torna pronta per il codice successivo.',
+    modifica: 'Modalità Modifica: leggi un codice già presente per correggerne la quantità o eliminarlo. Confermata la modifica torna attiva la modalità precedente.'
+  };
+
+  function setMode(next){
+    mode = next;
+    modeScannerBtn.setAttribute('aria-pressed', mode === 'scanner' ? 'true' : 'false');
+    modeManualBtn.setAttribute('aria-pressed', mode === 'manuale' ? 'true' : 'false');
+    modeEditBtn.setAttribute('aria-pressed', mode === 'modifica' ? 'true' : 'false');
+    modeHint.textContent = MODE_HINTS[mode];
+  }
+
+  function activateMode(next){
+    if (next === 'modifica'){
+      if (mode !== 'modifica'){ previousMode = mode; }
+    }
+    if (pendingScan){ hideConfirmPanel(true); }
+    if (pendingEdit){ hideEditPanel(); }
+    setMode(next);
+  }
+
+  modeScannerBtn.addEventListener('click', function(){ activateMode('scanner'); });
+  modeManualBtn.addEventListener('click', function(){ activateMode('manuale'); });
+  modeEditBtn.addEventListener('click', function(){ activateMode('modifica'); });
+
+  // ---- Interruttore lettura QR code ----
+  var qrEnabled = true;
+
+  qrToggleBtn.addEventListener('click', function(){
+    qrEnabled = !qrEnabled;
+    qrToggleBtn.setAttribute('aria-pressed', qrEnabled ? 'false' : 'true');
+    qrToggleBtn.title = qrEnabled ? 'Disattiva lettura QR code' : 'Riattiva lettura QR code';
+    showToast(qrEnabled ? 'Lettura QR code attiva' : 'Lettura QR code disattivata');
+    // Il motore ZXing non accetta un cambio di formati "a caldo": se la fotocamera
+    // è già in ascolto va riavviata per applicare subito la nuova lista di formati.
+    if (scanning){
+      var deviceToResume = currentDeviceId;
+      stopScanningKeepUI();
+      startScanning(deviceToResume);
+    }
+  });
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toast.classList.remove('show'); }, 1800);
+  }
+
+  function setStatus(state, text){
+    statusDot.className = 'status-dot' + (state ? ' ' + state : '');
+    statusText.textContent = text;
+  }
+
+  function fmtTime(d){
+    function pad(n){ return n < 10 ? '0'+n : ''+n; }
+    return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+  }
+
+  function renderRows(){
+    if (codes.length === 0){
+      emptyState.hidden = false;
+      rowsEl.hidden = true;
+      exportBtn.disabled = true;
+      clearBtn.disabled = true;
+    } else {
+      emptyState.hidden = true;
+      rowsEl.hidden = false;
+      exportBtn.disabled = false;
+      clearBtn.disabled = false;
+    }
+    countPill.textContent = codes.length;
+
+    rowsEl.innerHTML = '';
+    for (var i = codes.length - 1; i >= 0; i--){
+      (function(entry, displayIdx){
+        var li = document.createElement('li');
+        li.className = 'row';
+
+        var idx = document.createElement('span');
+        idx.className = 'idx';
+        idx.textContent = displayIdx;
+
+        var codeWrap = document.createElement('div');
+        codeWrap.className = 'code';
+        var codeEl = document.createElement('code');
+        codeEl.textContent = entry.code;
+        var meta = document.createElement('div');
+        meta.className = 'meta';
+        var fmtTag = document.createElement('span');
+        fmtTag.className = 'fmt-tag';
+        fmtTag.textContent = entry.format;
+        var timeSpan = document.createElement('span');
+        timeSpan.textContent = entry.qty > 1
+          ? (fmtTime(entry.firstTs) + ' → ' + fmtTime(entry.lastTs))
+          : fmtTime(entry.firstTs);
+        meta.appendChild(fmtTag);
+        meta.appendChild(timeSpan);
+        codeWrap.appendChild(codeEl);
+        codeWrap.appendChild(meta);
+
+        var qtyEl = document.createElement('span');
+        qtyEl.className = 'qty';
+        qtyEl.textContent = entry.qty;
+        qtyEl.title = 'Quantità';
+        if (entry._bump){
+          qtyEl.classList.add('bumped');
+          entry._bump = false;
+        }
+
+        var delBtn = document.createElement('button');
+        delBtn.className = 'del';
+        delBtn.type = 'button';
+        delBtn.setAttribute('aria-label', 'Rimuovi codice');
+        delBtn.textContent = '✕';
+        delBtn.addEventListener('click', function(){
+          var realIndex = codes.indexOf(entry);
+          if (realIndex > -1){
+            delete seen[entry.code];
+            codes.splice(realIndex, 1);
+            renderRows();
+          }
+        });
+
+        li.appendChild(idx);
+        li.appendChild(codeWrap);
+        li.appendChild(qtyEl);
+        li.appendChild(delBtn);
+        rowsEl.appendChild(li);
+      })(codes[i], i + 1);
+    }
+  }
+
+  function addCode(rawCode, format, addQty){
+    var code = (rawCode || '').trim();
+    if (!code) return;
+    var qtyToAdd = Math.max(1, parseInt(addQty, 10) || 1);
+    var existing = seen[code];
+    if (existing){
+      existing.qty += qtyToAdd;
+      existing.lastTs = new Date();
+      existing._bump = true;
+      renderRows();
+      showToast(code + ' × ' + existing.qty);
+    } else {
+      var entry = { code: code, format: format || 'MANUALE', qty: qtyToAdd, firstTs: new Date(), lastTs: new Date() };
+      seen[code] = entry;
+      codes.push(entry);
+      renderRows();
+      showToast(qtyToAdd > 1 ? ('Aggiunto: ' + code + ' × ' + qtyToAdd) : ('Aggiunto: ' + code));
+    }
+    if (navigator.vibrate) { try { navigator.vibrate(60); } catch(e){} }
+  }
+
+  manualAddBtn.addEventListener('click', function(){
+    addCode(manualInput.value, 'MANUALE', 1);
+    manualInput.value = '';
+    manualInput.focus();
+  });
+  manualInput.addEventListener('keydown', function(e){
+    if (e.key === 'Enter'){ manualAddBtn.click(); }
+  });
+
+  // ---- Pannello di conferma (modalità Manuale) ----
+  // La quantità si digita da tastierino numerico a schermo: nessun input testuale,
+  // nessun +/-. "fresh" = true finché non si preme la prima cifra: quel primo tocco
+  // sostituisce l'1 di default invece di accodarsi.
+  var confirmQtyValue = '1';
+  var confirmQtyFresh = true;
+  var MAX_QTY_DIGITS = 5;
+
+  function renderConfirmQty(){
+    confirmQtyDisplay.textContent = confirmQtyValue === '' ? '—' : confirmQtyValue;
+    confirmQtyError.textContent = '';
+  }
+
+  function pressQtyDigit(currentValue, currentFresh, digit){
+    if (currentFresh) return { value: digit, fresh: false };
+    if (currentValue === '0') return { value: digit, fresh: false };
+    if (currentValue.length >= MAX_QTY_DIGITS) return { value: currentValue, fresh: false };
+    return { value: currentValue + digit, fresh: false };
+  }
+
+  confirmKeypad.addEventListener('click', function(e){
+    var btn = e.target.closest('.kp-key');
+    if (!btn) return;
+    if (btn.dataset.action === 'clear'){
+      confirmQtyValue = '';
+      confirmQtyFresh = true;
+    } else if (btn.dataset.action === 'back'){
+      confirmQtyValue = confirmQtyValue.slice(0, -1);
+      confirmQtyFresh = false;
+    } else if (btn.dataset.digit){
+      var r = pressQtyDigit(confirmQtyValue, confirmQtyFresh, btn.dataset.digit);
+      confirmQtyValue = r.value;
+      confirmQtyFresh = r.fresh;
+    }
+    renderConfirmQty();
+  });
+
+  function showConfirmPanel(scan){
+    pendingScan = scan;
+    confirmCode.textContent = scan.code;
+    confirmFmt.textContent = scan.format;
+    confirmQtyValue = '1';
+    confirmQtyFresh = true;
+    renderConfirmQty();
+    confirmPanel.hidden = false;
+    reticle.hidden = true;
+    setStatus('', 'In attesa di conferma quantità…');
+  }
+
+  function hideConfirmPanel(discard){
+    if (discard && pendingScan){
+      showToast('Lettura scartata: ' + pendingScan.code);
+    }
+    pendingScan = null;
+    confirmPanel.hidden = true;
+    if (scanning){
+      reticle.hidden = false;
+      setStatus('live', 'In ascolto…');
+    }
+  }
+
+  confirmAddBtn.addEventListener('click', function(){
+    if (!pendingScan) return;
+    var qty = parseInt(confirmQtyValue, 10);
+    if (!Number.isFinite(qty) || qty < 1){
+      confirmQtyError.textContent = 'Digita una quantità di almeno 1 con il tastierino.';
+      return;
+    }
+    addCode(pendingScan.code, pendingScan.format, qty);
+    hideConfirmPanel(false);
+  });
+  confirmCancelBtn.addEventListener('click', function(){
+    hideConfirmPanel(true);
+  });
+
+  // ---- Pannello di modifica (modalità Modifica) ----
+  // Stesso principio del tastierino: si parte dalla quantità attuale già "fresh",
+  // così la prima cifra digitata la sostituisce interamente.
+  var editQtyValue = '1';
+  var editQtyFresh = true;
+
+  function renderEditQty(){
+    editQtyDisplay.textContent = editQtyValue === '' ? '—' : editQtyValue;
+    editQtyError.textContent = '';
+  }
+
+  editKeypad.addEventListener('click', function(e){
+    var btn = e.target.closest('.kp-key');
+    if (!btn) return;
+    if (btn.dataset.action === 'clear'){
+      editQtyValue = '';
+      editQtyFresh = true;
+    } else if (btn.dataset.action === 'back'){
+      editQtyValue = editQtyValue.slice(0, -1);
+      editQtyFresh = false;
+    } else if (btn.dataset.digit){
+      var r = pressQtyDigit(editQtyValue, editQtyFresh, btn.dataset.digit);
+      editQtyValue = r.value;
+      editQtyFresh = r.fresh;
+    }
+    renderEditQty();
+  });
+
+  function showEditPanel(entry){
+    pendingEdit = entry;
+    editCode.textContent = entry.code;
+    editFmt.textContent = entry.format;
+    editQtyValue = String(entry.qty);
+    editQtyFresh = true;
+    renderEditQty();
+    editPanel.hidden = false;
+    reticle.hidden = true;
+    setStatus('', 'Codice trovato — modifica in corso…');
+  }
+
+  function hideEditPanel(){
+    pendingEdit = null;
+    editPanel.hidden = true;
+    editQtyError.textContent = '';
+    if (scanning){
+      reticle.hidden = false;
+      setStatus('live', 'In ascolto…');
+    }
+  }
+
+  // Torna alla modalità attiva prima di "Modifica" solo a modifica confermata
+  // (salvataggio quantità o eliminazione), come richiesto: annullare resta in modalità Modifica.
+  function completeEdit(){
+    hideEditPanel();
+    activateMode(previousMode);
+  }
+
+  editSaveBtn.addEventListener('click', function(){
+    if (!pendingEdit) return;
+    var qty = parseInt(editQtyValue, 10);
+    if (!Number.isFinite(qty) || qty < 1){
+      editQtyError.textContent = 'La quantità deve essere almeno 1: per rimuovere il codice usa "Elimina dall\'elenco".';
+      return;
+    }
+    var entry = pendingEdit;
+    entry.qty = qty;
+    entry.lastTs = new Date();
+    entry._bump = true;
+    renderRows();
+    showToast('Quantità aggiornata: ' + entry.code + ' × ' + qty);
+    completeEdit();
+  });
+
+  editDeleteBtn.addEventListener('click', function(){
+    if (!pendingEdit) return;
+    var entry = pendingEdit;
+    if (!confirm('Eliminare "' + entry.code + '" dall\'elenco?')) return;
+    var realIndex = codes.indexOf(entry);
+    if (realIndex > -1){
+      delete seen[entry.code];
+      codes.splice(realIndex, 1);
+      renderRows();
+      showToast('Eliminato: ' + entry.code);
+    }
+    completeEdit();
+  });
+
+  editCancelBtn.addEventListener('click', function(){
+    // Annulla: nessuna modifica confermata, resta in modalità Modifica pronta per un nuovo codice.
+    hideEditPanel();
+  });
+
+  clearBtn.addEventListener('click', function(){
+    if (codes.length === 0) return;
+    if (confirm('Svuotare l\'intero elenco dei codici raccolti?')){
+      codes = [];
+      seen = Object.create(null);
+      renderRows();
+    }
+  });
+
+  function csvEscape(value){
+    var s = String(value);
+    if (/[",\n;]/.test(s)) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
+  function pad2(n){ return n < 10 ? '0'+n : ''+n; }
+  function isoLike(d){
+    return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+' '+pad2(d.getHours())+':'+pad2(d.getMinutes())+':'+pad2(d.getSeconds());
+  }
+
+  var downloadsCap = null;
+  if (window.claude && typeof window.claude.use === 'function'){
+    window.claude.use('downloads').then(function(cap){ downloadsCap = cap; }).catch(function(){});
+  }
+
+  exportBtn.addEventListener('click', function(){
+    if (codes.length === 0) return;
+    var lines = ['codice;quantita;formato;prima_lettura;ultima_lettura'];
+    var chronological = codes.slice().sort(function(a,b){ return a.firstTs - b.firstTs; });
+    chronological.forEach(function(entry){
+      lines.push([
+        csvEscape(entry.code),
+        csvEscape(entry.qty),
+        csvEscape(entry.format),
+        csvEscape(isoLike(entry.firstTs)),
+        csvEscape(isoLike(entry.lastTs))
+      ].join(';'));
+    });
+    var csvContent = '﻿' + lines.join('\r\n');
+    var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    var stamp = isoLike(new Date()).replace(/[: ]/g, '-');
+    var filename = 'codici_' + stamp + '.csv';
+
+    if (downloadsCap){
+      downloadsCap.save({ filename: filename, data: blob }).then(function(res){
+        if (res.status === 'saved'){
+          showToast('CSV salvato (' + codes.length + ' codici)');
+        }
+      }).catch(function(err){
+        if (err && err.code === 'declined'){ return; }
+        showToast('Salvataggio non riuscito: riprova');
+      });
+    } else {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+      showToast('CSV scaricato (' + codes.length + ' codici)');
+    }
+  });
+
+  // ---- Scanning ----
+
+  var lastFrameTime = 0, frameCount = 0, fpsWindowStart = 0;
+
+  function startFpsCounter(){
+    fpsWindowStart = performance.now();
+    frameCount = 0;
+  }
+  function tickFps(){
+    frameCount++;
+    var now = performance.now();
+    if (now - fpsWindowStart > 1000){
+      fpsEl.textContent = Math.round(frameCount * 1000 / (now - fpsWindowStart)) + ' fps';
+      fpsWindowStart = now;
+      frameCount = 0;
+    }
+  }
+
+  function applyTorchSupport(){
+    try {
+      var track = stream && stream.getVideoTracks && stream.getVideoTracks()[0];
+      var caps = track && track.getCapabilities ? track.getCapabilities() : null;
+      torchBtn.hidden = !(caps && caps.torch);
+    } catch(e){
+      torchBtn.hidden = true;
+    }
+  }
+
+  torchBtn.addEventListener('click', function(){
+    try {
+      var track = stream.getVideoTracks()[0];
+      torchOn = !torchOn;
+      track.applyConstraints({ advanced: [{ torch: torchOn }] });
+      torchBtn.textContent = torchOn ? 'Flash: on' : 'Flash: off';
+    } catch(e){
+      showToast('Flash non disponibile su questo dispositivo');
+    }
+  });
+
+  function listCameras(){
+    return navigator.mediaDevices.enumerateDevices().then(function(devices){
+      videoDevices = devices.filter(function(d){ return d.kind === 'videoinput'; });
+      switchCamBtn.hidden = videoDevices.length < 2;
+    }).catch(function(){});
+  }
+
+  function stopScanning(){
+    scanning = false;
+    if (pendingScan){ hideConfirmPanel(true); }
+    if (pendingEdit){ hideEditPanel(); }
+    if (codeReader) {
+      try { codeReader.reset(); } catch(e){}
+    }
+    if (stream){
+      stream.getTracks().forEach(function(t){ t.stop(); });
+      stream = null;
+    }
+    video.srcObject = null;
+    placeholder.hidden = false;
+    reticle.hidden = true;
+    fpsEl.textContent = '';
+    torchBtn.hidden = true;
+    torchOn = false;
+    setStatus('', 'Fotocamera spenta');
+    toggleBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg> Avvia fotocamera';
+  }
+
+  function handleDecoded(result){
+    if (!result) return;
+    var text = result.getText ? result.getText() : String(result);
+    var formatName = 'CODICE';
+    try {
+      var fmt = result.getBarcodeFormat ? result.getBarcodeFormat() : null;
+      if (fmt !== null && window.ZXing && window.ZXing.BarcodeFormat){
+        for (var key in window.ZXing.BarcodeFormat){
+          if (window.ZXing.BarcodeFormat[key] === fmt){ formatName = key; break; }
+        }
+      }
+    } catch(e){}
+
+    if (mode === 'modifica'){
+      if (pendingEdit) return; // già in modifica: attende conferma o annullamento
+      var now2 = performance.now();
+      if (now2 < editCooldownUntil) return;
+      var entry = seen[text];
+      if (!entry){
+        editCooldownUntil = now2 + EDIT_COOLDOWN_MS;
+        showToast('Codice non presente in elenco: ' + text);
+        tickFps();
+        return;
+      }
+      showEditPanel(entry);
+      tickFps();
+      return;
+    }
+
+    if (mode === 'manuale'){
+      // Ignora nuove letture finché la quantità corrente non è confermata o scartata.
+      if (pendingScan) return;
+      showConfirmPanel({ code: text, format: formatName });
+      tickFps();
+      return;
+    }
+
+    // Modalità Scanner: aggiunge/conta subito, con un breve blocco per evitare
+    // di contare più volte lo stesso codice mentre resta inquadrato.
+    var now = performance.now();
+    if (now < scannerCooldownUntil) return;
+    scannerCooldownUntil = now + SCANNER_COOLDOWN_MS;
+    addCode(text, formatName, 1);
+    tickFps();
+  }
+
+  function startScanning(deviceId){
+    if (!window.ZXing){
+      setStatus('err', 'Libreria di scansione non disponibile');
+      showToast('Impossibile caricare il motore di scansione');
+      return;
+    }
+    setStatus('', 'Avvio fotocamera…');
+    var hints = new Map();
+    var formats = [
+      window.ZXing.BarcodeFormat.EAN_13,
+      window.ZXing.BarcodeFormat.EAN_8,
+      window.ZXing.BarcodeFormat.CODE_128,
+      window.ZXing.BarcodeFormat.CODE_39,
+      window.ZXing.BarcodeFormat.UPC_A,
+      window.ZXing.BarcodeFormat.UPC_E,
+      window.ZXing.BarcodeFormat.ITF,
+      window.ZXing.BarcodeFormat.DATA_MATRIX,
+      window.ZXing.BarcodeFormat.CODABAR,
+      window.ZXing.BarcodeFormat.PDF_417,
+      window.ZXing.BarcodeFormat.AZTEC
+    ];
+    if (qrEnabled){
+      formats.unshift(window.ZXing.BarcodeFormat.QR_CODE);
+    }
+    hints.set(window.ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+    hints.set(window.ZXing.DecodeHintType.TRY_HARDER, true);
+
+    codeReader = new window.ZXing.BrowserMultiFormatReader(hints);
+
+    var constraints = deviceId
+      ? { video: { deviceId: { exact: deviceId } } }
+      : { video: { facingMode: { ideal: 'environment' } } };
+
+    codeReader.decodeFromConstraints(constraints, video, function(result, err){
+      if (result){
+        handleDecoded(result);
+      }
+      // NotFoundException fires continuously while no code is in view; ignore it.
+    }).then(function(){
+      stream = video.srcObject;
+      scanning = true;
+      placeholder.hidden = true;
+      reticle.hidden = false;
+      setStatus('live', 'In ascolto…');
+      startFpsCounter();
+      applyTorchSupport();
+      listCameras().then(function(){
+        var track = stream.getVideoTracks()[0];
+        var settings = track.getSettings ? track.getSettings() : {};
+        currentDeviceId = settings.deviceId || deviceId || null;
+      });
+      toggleBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg> Ferma fotocamera';
+    }).catch(function(err){
+      console.error(err);
+      scanning = false;
+      var msg = 'Impossibile accedere alla fotocamera';
+      if (err && err.name === 'NotAllowedError') msg = 'Permesso fotocamera negato';
+      if (err && err.name === 'NotFoundError') msg = 'Nessuna fotocamera trovata';
+      setStatus('err', msg);
+      showToast(msg);
+      toggleBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg> Avvia fotocamera';
+    });
+  }
+
+  toggleBtn.addEventListener('click', function(){
+    if (scanning){
+      stopScanning();
+    } else {
+      startScanning(currentDeviceId);
+    }
+  });
+
+  switchCamBtn.addEventListener('click', function(){
+    if (videoDevices.length < 2) return;
+    if (pendingScan){ hideConfirmPanel(true); }
+    if (pendingEdit){ hideEditPanel(); }
+    var idx = videoDevices.findIndex(function(d){ return d.deviceId === currentDeviceId; });
+    var next = videoDevices[(idx + 1) % videoDevices.length];
+    stopScanningKeepUI();
+    startScanning(next.deviceId);
+  });
+
+  function stopScanningKeepUI(){
+    if (codeReader) { try { codeReader.reset(); } catch(e){} }
+    if (stream){ stream.getTracks().forEach(function(t){ t.stop(); }); stream = null; }
+  }
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    setStatus('err', 'Fotocamera non supportata da questo browser');
+    toggleBtn.disabled = true;
+  }
+
+  renderRows();
+})();
+</script>
+
+<script>
+// Registrazione del service worker per installazione PWA e funzionamento offline di base.
+// Richiede HTTPS (GitHub Pages lo fornisce automaticamente) o "localhost" in sviluppo.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function (err) {
+      console.warn('Registrazione service worker non riuscita:', err);
+    });
+  });
+}
+</script>
+
+</body>
+</html>
