@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Scanner Codici CSV</title>
+<title>Lettore codici</title>
 <meta name="description" content="Scansiona codici a barre e QR con la fotocamera ed esportali in un file CSV con quantità.">
 <meta name="theme-color" content="#007aff">
 
@@ -15,7 +15,7 @@
 <!-- Supporto PWA su iOS (Safari non legge tutte le proprietà del manifest) -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Scanner CSV">
+<meta name="apple-mobile-web-app-title" content="Lettore codici">
 <meta name="mobile-web-app-capable" content="yes">
 
 <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.23.0/umd/index.min.js"></script>
@@ -194,6 +194,17 @@ button:disabled{opacity:0.4;cursor:not-allowed}
 button:disabled:active{transform:none}
 button svg{flex-shrink:0}
 
+.controls-row{
+  display:flex;
+  gap:8px;
+  align-items:stretch;
+}
+.controls-row > .mode-toggle,
+.controls-row > .secondary-row{
+  flex:1 1 50%;
+  min-width:0;
+}
+
 .mode-toggle{
   display:flex;
   background:var(--surface-alt);
@@ -203,43 +214,57 @@ button svg{flex-shrink:0}
 }
 .mode-toggle button{
   flex:1;
+  min-width:0;
   border:none;
   border-radius:11px;
-  padding:9px 10px;
+  padding:8px 4px;
   background:transparent;
   color:var(--ink-soft);
   font-weight:600;
-  font-size:0.88rem;
+  font-size:0.74rem;
   justify-content:center;
+  gap:4px;
   box-shadow:none;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
+.mode-toggle button svg{width:13px;height:13px;flex-shrink:0}
 .mode-toggle button[aria-pressed="true"]{
   background:var(--surface);
   color:var(--accent);
   box-shadow:var(--shadow);
 }
 
-.secondary-row{display:flex;gap:8px;align-items:stretch}
+.secondary-row{display:flex;gap:6px;align-items:stretch;min-width:0}
 .edit-standalone{
   flex:1;
+  min-width:0;
   background:var(--surface-alt);
   color:var(--ink-soft);
   justify-content:center;
-  font-size:0.9rem;
+  gap:4px;
+  padding:8px 6px;
+  font-size:0.74rem;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
+.edit-standalone svg{width:13px;height:13px;flex-shrink:0}
 .edit-standalone[aria-pressed="true"]{
   background:var(--edit);
   color:var(--edit-ink);
 }
 .qr-toggle{
   flex:0 0 auto;
-  width:46px;
-  height:46px;
+  width:38px;
+  height:auto;
   padding:0;
   justify-content:center;
   background:var(--surface-alt);
   color:var(--ink-soft);
 }
+.qr-toggle svg{width:17px;height:17px}
 .qr-toggle .qr-slash{opacity:0;transition:opacity 0.15s ease}
 .qr-toggle[aria-pressed="true"]{
   background:color-mix(in srgb, var(--danger) 16%, var(--surface-alt));
@@ -247,15 +272,84 @@ button svg{flex-shrink:0}
 }
 .qr-toggle[aria-pressed="true"] .qr-slash{opacity:1}
 
+.list-menu{position:relative;flex:1;min-width:0}
+.list-menu-btn{
+  width:100%;
+  min-width:0;
+  background:var(--surface-alt);
+  color:var(--ink-soft);
+  justify-content:center;
+  gap:4px;
+  padding:8px 6px;
+  font-size:0.74rem;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.list-menu-btn svg{width:13px;height:13px;flex-shrink:0}
+.list-menu-btn[aria-expanded="true"]{
+  background:var(--surface);
+  color:var(--accent);
+  box-shadow:var(--shadow);
+}
+.list-menu-dropdown{
+  position:absolute;
+  top:calc(100% + 8px);
+  right:0;
+  min-width:190px;
+  background:var(--surface);
+  border-radius:var(--r-md);
+  box-shadow:var(--shadow-lg);
+  padding:6px;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  z-index:60;
+}
+.list-menu-dropdown[hidden]{display:none}
+.list-menu-item{
+  width:100%;
+  justify-content:flex-start;
+  gap:10px;
+  background:none;
+  color:var(--ink);
+  font-size:0.9rem;
+  font-weight:600;
+  padding:10px 12px;
+  border-radius:10px;
+}
+.list-menu-item:disabled{opacity:0.4}
+.list-menu-item.danger-item{color:var(--danger)}
+
 .mode-hint{font-size:0.8rem;color:var(--ink-soft);line-height:1.5;margin:0}
 
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.42);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  padding-bottom:calc(20px + env(safe-area-inset-bottom, 0px));
+  z-index:100;
+  animation:fadeIn 0.15s ease;
+}
+.modal-overlay[hidden]{display:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
 .confirm-panel{
-  border-top:1px solid var(--line);
-  padding:18px;
+  padding:20px;
   display:flex;
   flex-direction:column;
   gap:14px;
   background:var(--surface);
+  border-radius:var(--r-lg);
+  box-shadow:0 20px 50px rgba(0,0,0,0.28);
+  width:100%;
+  max-width:360px;
+  max-height:calc(100vh - 40px);
+  overflow-y:auto;
 }
 .confirm-panel .cp-code{display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center}
 .confirm-panel .cp-code-label{font-size:0.72rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em}
@@ -315,8 +409,18 @@ button svg{flex-shrink:0}
 button.edit-save{background:var(--edit);color:var(--edit-ink)}
 button.ghost{background:var(--surface-alt);color:var(--ink-soft)}
 
-.manual-row{display:flex;gap:8px}
-.manual-row input{
+.clear-message{
+  margin:0;
+  text-align:center;
+  font-size:0.92rem;
+  color:var(--ink);
+  line-height:1.5;
+}
+.clear-message.strong{color:var(--danger);font-weight:600}
+#clearTitle.strong{color:var(--danger)}
+
+.action-row{display:flex;gap:8px;align-items:stretch}
+.action-row input{
   flex:1;
   min-width:0;
   font-family:var(--sans);
@@ -328,8 +432,33 @@ button.ghost{background:var(--surface-alt);color:var(--ink-soft)}
   color:var(--ink);
   box-shadow:var(--shadow);
 }
-.manual-row input::placeholder{color:var(--ink-soft)}
-.manual-row input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.action-row input::placeholder{color:var(--ink-soft)}
+.action-row input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.icon-btn{
+  flex:0 0 auto;
+  width:44px;
+  padding:0;
+  justify-content:center;
+  gap:0;
+}
+.qty-input{
+  flex:0 0 auto;
+  width:38px;
+  min-width:0;
+  text-align:center;
+  font-family:var(--mono);
+  font-variant-numeric:tabular-nums;
+  font-weight:700;
+  font-size:0.95rem;
+  padding:12px 4px;
+  border-radius:var(--r-md);
+  border:none;
+  background:var(--surface);
+  color:var(--ink);
+  box-shadow:var(--shadow);
+}
+.qty-input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.qty-input[hidden]{display:none}
 
 section.list-card{
   background:var(--surface);
@@ -359,31 +488,56 @@ section.list-card{
   background:var(--surface-alt);
   border-radius:var(--r-md);
 }
-ul.rows{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto}
+ul.rows{list-style:none;margin:0;padding:0;max-height:360px;overflow-y:auto}
 li.row{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 12px;
-  background:var(--surface-alt);
-  border-radius:var(--r-md);
+  position:relative;
+  overflow:hidden;
+  border-bottom:1px solid var(--line);
   animation:in 0.2s ease;
 }
+li.row:last-child{border-bottom:none}
 @keyframes in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
-li.row .idx{font-family:var(--mono);font-size:0.72rem;color:var(--ink-soft);width:1.6em;flex-shrink:0;text-align:right}
-li.row .code{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-li.row .code code{font-family:var(--mono);font-size:0.92rem;word-break:break-all}
-li.row .meta{font-size:0.72rem;color:var(--ink-soft);display:flex;gap:8px;flex-wrap:wrap}
-li.row .fmt-tag{
-  font-family:var(--sans);font-size:0.68rem;font-weight:600;letter-spacing:0.02em;
-  color:var(--accent);background:color-mix(in srgb, var(--accent) 14%, transparent);
-  padding:2px 8px;border-radius:999px;white-space:nowrap;
+
+.row-edit-bg, .row-delete-bg{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:76px;
+  display:flex;
+  align-items:stretch;
 }
+.row-edit-bg{left:0;background:var(--edit)}
+.row-delete-bg{right:0;background:var(--danger)}
+.row-edit-btn, .row-delete-btn{
+  flex:1;
+  background:none;
+  border:none;
+  border-radius:0;
+  color:#fff;
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:0.85rem;
+  justify-content:center;
+}
+.row-edit-btn:active, .row-delete-btn:active{opacity:0.75;transform:none}
+
+.row-front{
+  position:relative;
+  display:flex;align-items:center;gap:10px;
+  padding:12px 2px;
+  background:var(--surface);
+  touch-action:pan-y;
+  will-change:transform;
+}
+li.row .idx{font-family:var(--mono);font-size:0.72rem;color:var(--ink-soft);width:1.6em;flex-shrink:0;text-align:right}
+li.row .code-text{flex:1;min-width:0;font-family:var(--mono);font-size:0.92rem;word-break:break-all}
 li.row .qty{
   font-family:var(--mono);
   font-variant-numeric:tabular-nums;
   font-size:0.9rem;
   font-weight:700;
   color:var(--ink);
-  background:var(--surface);
+  background:var(--surface-alt);
   min-width:2.4em;
   text-align:center;
   padding:5px 8px;
@@ -396,11 +550,6 @@ li.row .qty.bumped{animation:bump 0.3s ease}
   40%{transform:scale(1.25);background:color-mix(in srgb, var(--accent) 30%, transparent);color:var(--accent)}
   100%{transform:scale(1)}
 }
-li.row .del{
-  background:none;border:none;padding:6px;border-radius:50%;color:var(--ink-soft);
-  font-size:1rem;line-height:1;flex-shrink:0;
-}
-li.row .del:hover{color:var(--danger);background:color-mix(in srgb, var(--danger) 12%, transparent)}
 
 .export-row{display:flex;gap:10px;flex-wrap:wrap}
 
@@ -433,38 +582,54 @@ footer{
 
 <div class="wrap">
   <header>
-    <h1>Scanner Codici CSV</h1>
-    <p class="tagline">Inquadra un codice a barre o QR: viene aggiunto all'elenco, pronto per l'esportazione in CSV. Scegli la modalità di lettura qui sotto.</p>
+    <h1>Lettore codici</h1>
   </header>
 
-  <div class="mode-toggle" role="group" aria-label="Modalità di lettura">
-    <button id="modeScannerBtn" type="button" aria-pressed="true">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h7l-1 8 11-14h-7l1-8z"/></svg>
-      Scanner
-    </button>
-    <button id="modeManualBtn" type="button" aria-pressed="false">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
-      Manuale
-    </button>
-  </div>
+  <div class="controls-row">
+    <div class="mode-toggle" role="group" aria-label="Modalità di lettura">
+      <button id="modeScannerBtn" type="button" aria-pressed="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h7l-1 8 11-14h-7l1-8z"/></svg>
+        Scanner
+      </button>
+      <button id="modeManualBtn" type="button" aria-pressed="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
+        Manuale
+      </button>
+    </div>
 
-  <div class="secondary-row">
-    <button id="modeEditBtn" class="edit-standalone" type="button" aria-pressed="false">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-      Modifica
-    </button>
-    <button id="qrToggleBtn" class="qr-toggle" type="button" aria-pressed="false" aria-label="Disattiva lettura QR code" title="Disattiva lettura QR code">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="3" width="7" height="7" rx="1.2"/>
-        <rect x="14" y="3" width="7" height="7" rx="1.2"/>
-        <rect x="3" y="14" width="7" height="7" rx="1.2"/>
-        <rect x="14" y="14" width="3" height="3" rx="0.6" fill="currentColor" stroke="none"/>
-        <rect x="18.5" y="14" width="2.5" height="2.5" rx="0.5" fill="currentColor" stroke="none"/>
-        <rect x="14" y="18.5" width="2.5" height="2.5" rx="0.5" fill="currentColor" stroke="none"/>
-        <rect x="18" y="18" width="3" height="3" rx="0.6" fill="currentColor" stroke="none"/>
-        <line class="qr-slash" x1="2.5" y1="21.5" x2="21.5" y2="2.5" stroke-linecap="round" stroke-width="2.5"/>
-      </svg>
-    </button>
+    <div class="secondary-row">
+      <button id="qrToggleBtn" class="qr-toggle" type="button" aria-pressed="false" aria-label="Disattiva lettura QR code" title="Disattiva lettura QR code">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1.2"/>
+          <rect x="14" y="3" width="7" height="7" rx="1.2"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.2"/>
+          <rect x="14" y="14" width="3" height="3" rx="0.6" fill="currentColor" stroke="none"/>
+          <rect x="18.5" y="14" width="2.5" height="2.5" rx="0.5" fill="currentColor" stroke="none"/>
+          <rect x="14" y="18.5" width="2.5" height="2.5" rx="0.5" fill="currentColor" stroke="none"/>
+          <rect x="18" y="18" width="3" height="3" rx="0.6" fill="currentColor" stroke="none"/>
+          <line class="qr-slash" x1="2.5" y1="21.5" x2="21.5" y2="2.5" stroke-linecap="round" stroke-width="2.5"/>
+        </svg>
+      </button>
+      <button id="toggleBtn" class="primary qr-toggle" type="button" aria-label="Avvia fotocamera" title="Avvia fotocamera">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+      </button>
+      <div class="list-menu">
+        <button id="listMenuBtn" class="list-menu-btn" type="button" aria-haspopup="true" aria-expanded="false">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Elenco
+        </button>
+        <div id="listMenuDropdown" class="list-menu-dropdown" hidden>
+          <button id="exportBtn" class="list-menu-item" type="button" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+            Esporta CSV
+          </button>
+          <button id="clearBtn" class="list-menu-item danger-item" type="button" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+            Svuota elenco
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <p id="modeHint" class="mode-hint">Modalità Scanner: ogni codice letto viene aggiunto (o conteggiato) subito e la fotocamera resta pronta per la lettura successiva.</p>
@@ -478,7 +643,17 @@ footer{
         <span>Fotocamera non attiva</span>
       </div>
     </div>
-    <div id="confirmPanel" class="confirm-panel" hidden>
+    <div class="status-bar">
+      <div class="status-left">
+        <span id="statusDot" class="status-dot"></span>
+        <span id="statusText">Fotocamera spenta</span>
+      </div>
+      <span id="fps" style="font-family:var(--mono)"></span>
+    </div>
+  </div>
+
+  <div id="confirmOverlay" class="modal-overlay" hidden>
+    <div id="confirmPanel" class="confirm-panel" role="dialog" aria-modal="true" aria-label="Conferma quantità">
       <div class="cp-code">
         <span class="cp-code-label">Codice letto — in attesa di conferma</span>
         <div class="cp-code-value">
@@ -510,7 +685,10 @@ footer{
         <button id="confirmCancelBtn" class="danger" type="button">Scarta</button>
       </div>
     </div>
-    <div id="editPanel" class="confirm-panel edit-panel" hidden>
+  </div>
+
+  <div id="editOverlay" class="modal-overlay" hidden>
+    <div id="editPanel" class="confirm-panel edit-panel" role="dialog" aria-modal="true" aria-label="Modifica quantità">
       <div class="cp-code">
         <span class="cp-code-label">Codice trovato — modifica in corso</span>
         <div class="cp-code-value">
@@ -543,30 +721,35 @@ footer{
         <button id="editCancelBtn" class="ghost" type="button">Annulla</button>
       </div>
     </div>
-    <div class="status-bar">
-      <div class="status-left">
-        <span id="statusDot" class="status-dot"></span>
-        <span id="statusText">Fotocamera spenta</span>
+  </div>
+
+  <div id="clearOverlay" class="modal-overlay" hidden>
+    <div class="confirm-panel" role="dialog" aria-modal="true" aria-label="Svuota elenco">
+      <div class="cp-code">
+        <span class="cp-code-label" id="clearTitle">Svuota elenco</span>
       </div>
-      <span id="fps" style="font-family:var(--mono)"></span>
+      <p id="clearMessage" class="clear-message"></p>
+      <div class="confirm-actions">
+        <button id="clearConfirmBtn" class="danger" type="button">Elimina tutto</button>
+        <button id="clearCancelBtn" class="ghost" type="button">Annulla</button>
+      </div>
     </div>
   </div>
 
-  <div class="controls">
-    <button id="toggleBtn" class="primary" type="button">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-      Avvia fotocamera
+  <div class="action-row">
+    <input id="manualInput" type="text" inputmode="numeric" placeholder="Digita codice" aria-label="Digita codice">
+    <input id="manualQtyInput" class="qty-input" type="text" inputmode="numeric" pattern="[0-9]*" value="1" aria-label="Quantità" hidden>
+    <button id="manualAddBtn" class="icon-btn" type="button" aria-label="Aggiungi" title="Aggiungi">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
     </button>
+  </div>
+
+  <div class="controls">
     <button id="switchCamBtn" type="button" hidden>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
       Cambia fotocamera
     </button>
     <button id="torchBtn" type="button" hidden>Flash</button>
-  </div>
-
-  <div class="manual-row">
-    <input id="manualInput" type="text" inputmode="text" placeholder="Oppure inserisci un codice manualmente" aria-label="Inserisci codice manualmente">
-    <button id="manualAddBtn" type="button">Aggiungi</button>
   </div>
 
   <section class="list-card">
@@ -576,18 +759,8 @@ footer{
     </div>
     <div id="emptyState" class="empty-state">Nessun codice ancora. Avvia la fotocamera e inquadra un codice a barre.</div>
     <ul id="rows" class="rows" hidden></ul>
-    <div class="export-row">
-      <button id="exportBtn" class="primary" type="button" disabled>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-        Esporta CSV
-      </button>
-      <button id="clearBtn" class="danger" type="button" disabled>Svuota elenco</button>
-    </div>
   </section>
 
-  <p class="hint">Il file CSV viene scaricato direttamente sul dispositivo (colonne: codice, quantità, formato, prima lettura, ultima lettura). Rileggendo lo stesso codice la quantità aumenta invece di creare una riga duplicata. Per installarla come app: sul telefono apri il menu del browser e scegli "Aggiungi a schermata Home" / "Installa app".</p>
-
-  <footer>Funziona interamente nel browser: nessun codice viene inviato altrove.</footer>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -606,6 +779,7 @@ footer{
   var switchCamBtn = document.getElementById('switchCamBtn');
   var torchBtn = document.getElementById('torchBtn');
   var manualInput = document.getElementById('manualInput');
+  var manualQtyInput = document.getElementById('manualQtyInput');
   var manualAddBtn = document.getElementById('manualAddBtn');
   var rowsEl = document.getElementById('rows');
   var emptyState = document.getElementById('emptyState');
@@ -615,9 +789,11 @@ footer{
   var toast = document.getElementById('toast');
   var modeScannerBtn = document.getElementById('modeScannerBtn');
   var modeManualBtn = document.getElementById('modeManualBtn');
-  var modeEditBtn = document.getElementById('modeEditBtn');
   var qrToggleBtn = document.getElementById('qrToggleBtn');
+  var listMenuBtn = document.getElementById('listMenuBtn');
+  var listMenuDropdown = document.getElementById('listMenuDropdown');
   var modeHint = document.getElementById('modeHint');
+  var confirmOverlay = document.getElementById('confirmOverlay');
   var confirmPanel = document.getElementById('confirmPanel');
   var confirmCode = document.getElementById('confirmCode');
   var confirmFmt = document.getElementById('confirmFmt');
@@ -626,6 +802,7 @@ footer{
   var confirmQtyError = document.getElementById('confirmQtyError');
   var confirmAddBtn = document.getElementById('confirmAddBtn');
   var confirmCancelBtn = document.getElementById('confirmCancelBtn');
+  var editOverlay = document.getElementById('editOverlay');
   var editPanel = document.getElementById('editPanel');
   var editCode = document.getElementById('editCode');
   var editFmt = document.getElementById('editFmt');
@@ -635,9 +812,19 @@ footer{
   var editSaveBtn = document.getElementById('editSaveBtn');
   var editDeleteBtn = document.getElementById('editDeleteBtn');
   var editCancelBtn = document.getElementById('editCancelBtn');
+  var clearOverlay = document.getElementById('clearOverlay');
+  var clearTitle = document.getElementById('clearTitle');
+  var clearMessage = document.getElementById('clearMessage');
+  var clearConfirmBtn = document.getElementById('clearConfirmBtn');
+  var clearCancelBtn = document.getElementById('clearCancelBtn');
 
   var codes = [];          // {code, format, qty, firstTs, lastTs}
   var seen = Object.create(null); // code -> entry (same object as in codes)
+  var lastChangeTs = null; // ultima modifica all'elenco (aggiunta, quantità, eliminazione)
+  var lastExportTs = null; // ultima esportazione CSV riuscita
+
+  function markChanged(){ lastChangeTs = new Date(); }
+  function markExported(){ lastExportTs = new Date(); }
   var scanning = false;
   var stream = null;
   var codeReader = null;
@@ -650,23 +837,30 @@ footer{
   var previousMode = 'scanner';   // modalità a cui tornare dopo una modifica confermata
   var pendingScan = null;         // {code, format} awaiting confirmation in modalità manuale
   var pendingEdit = null;         // entry in codes[] in fase di modifica
-  var scannerCooldownUntil = 0;   // throttle for modalità scanner
+  var editViaList = false;        // true se il pannello di modifica è stato aperto con lo swipe dall'elenco
+  var lastSeenCode = null;        // codice attualmente "inquadrato" in modalità Scanner (evita di ricontarlo)
+  var missingSince = 0;           // performance.now() da quando nessun codice viene più rilevato
+  var RESCAN_GRACE_MS = 450;      // tempo di mancata lettura prima di considerare il codice uscito dall'inquadratura
   var editCooldownUntil = 0;      // throttle for modalità modifica (evita riletture accidentali)
-  var SCANNER_COOLDOWN_MS = 1300;
   var EDIT_COOLDOWN_MS = 1300;
 
   var MODE_HINTS = {
-    scanner: 'Modalità Scanner: ogni codice letto viene aggiunto (o conteggiato) subito e la fotocamera resta pronta per la lettura successiva.',
-    manuale: 'Modalità Manuale: dopo la lettura la fotocamera si mette in pausa; conferma la quantità per aggiungerla all\'elenco, poi torna pronta per il codice successivo.',
-    modifica: 'Modalità Modifica: leggi un codice già presente per correggerne la quantità o eliminarlo. Confermata la modifica torna attiva la modalità precedente.'
+    scanner: 'Il codice viene subito aggiunto all\'elenco.',
+    manuale: 'Il codice viene aggiunto all\'elenco solo dopo aver confermato la quantità.',
+    modifica: 'Modalità Modifica: leggi un codice già presente per correggerne la quantità o eliminarlo.'
   };
 
   function setMode(next){
     mode = next;
     modeScannerBtn.setAttribute('aria-pressed', mode === 'scanner' ? 'true' : 'false');
     modeManualBtn.setAttribute('aria-pressed', mode === 'manuale' ? 'true' : 'false');
-    modeEditBtn.setAttribute('aria-pressed', mode === 'modifica' ? 'true' : 'false');
     modeHint.textContent = MODE_HINTS[mode];
+    if (mode === 'manuale'){
+      manualQtyInput.hidden = false;
+      manualQtyInput.value = '1';
+    } else {
+      manualQtyInput.hidden = true;
+    }
   }
 
   function activateMode(next){
@@ -680,7 +874,6 @@ footer{
 
   modeScannerBtn.addEventListener('click', function(){ activateMode('scanner'); });
   modeManualBtn.addEventListener('click', function(){ activateMode('manuale'); });
-  modeEditBtn.addEventListener('click', function(){ activateMode('modifica'); });
 
   // ---- Interruttore lettura QR code ----
   var qrEnabled = true;
@@ -696,6 +889,25 @@ footer{
       var deviceToResume = currentDeviceId;
       stopScanningKeepUI();
       startScanning(deviceToResume);
+    }
+  });
+
+  // ---- Menu "Elenco" (Esporta CSV / Svuota elenco) ----
+  function closeListMenu(){
+    listMenuDropdown.hidden = true;
+    listMenuBtn.setAttribute('aria-expanded', 'false');
+  }
+  function openListMenu(){
+    listMenuDropdown.hidden = false;
+    listMenuBtn.setAttribute('aria-expanded', 'true');
+  }
+  listMenuBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    if (listMenuDropdown.hidden){ openListMenu(); } else { closeListMenu(); }
+  });
+  document.addEventListener('click', function(e){
+    if (!listMenuDropdown.hidden && e.target !== listMenuBtn && !listMenuDropdown.contains(e.target)){
+      closeListMenu();
     }
   });
 
@@ -716,6 +928,72 @@ footer{
     return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
   }
 
+  var SWIPE_OPEN_PX = 76;
+  var closeOpenRow = null; // funzione che chiude l'unica riga attualmente aperta con swipe
+
+  function attachSwipe(li, front){
+    var startX = 0, startY = 0, baseX = 0, dragging = false, horizontal = null;
+    var state = 'closed'; // 'closed' | 'edit' | 'delete'
+
+    function setState(next, animated){
+      state = next;
+      var x = next === 'edit' ? SWIPE_OPEN_PX : (next === 'delete' ? -SWIPE_OPEN_PX : 0);
+      front.style.transition = (animated === false) ? 'none' : '';
+      front.style.transform = 'translateX(' + x + 'px)';
+      if (next === 'closed'){
+        if (closeOpenRow === closeSelf){ closeOpenRow = null; }
+      } else {
+        if (closeOpenRow && closeOpenRow !== closeSelf){ closeOpenRow(); }
+        closeOpenRow = closeSelf;
+      }
+    }
+    function closeSelf(){ setState('closed'); }
+
+    front.addEventListener('pointerdown', function(e){
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      startX = e.clientX;
+      startY = e.clientY;
+      baseX = state === 'edit' ? SWIPE_OPEN_PX : (state === 'delete' ? -SWIPE_OPEN_PX : 0);
+      dragging = true;
+      horizontal = null;
+      front.style.transition = 'none';
+    });
+    front.addEventListener('pointermove', function(e){
+      if (!dragging) return;
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      if (horizontal === null){
+        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+        horizontal = Math.abs(dx) > Math.abs(dy);
+        if (!horizontal){ dragging = false; return; }
+        try { front.setPointerCapture(e.pointerId); } catch(err){}
+      }
+      if (!horizontal) return;
+      e.preventDefault();
+      var next = Math.max(-SWIPE_OPEN_PX, Math.min(SWIPE_OPEN_PX, baseX + dx));
+      front.style.transform = 'translateX(' + next + 'px)';
+    });
+    function endDrag(){
+      if (!dragging) return;
+      dragging = false;
+      if (horizontal){
+        var m = /translateX\((-?[\d.]+)px\)/.exec(front.style.transform);
+        var current = m ? parseFloat(m[1]) : 0;
+        if (current < -SWIPE_OPEN_PX / 2){ setState('delete'); }
+        else if (current > SWIPE_OPEN_PX / 2){ setState('edit'); }
+        else { setState('closed'); }
+      }
+      horizontal = null;
+    }
+    front.addEventListener('pointerup', endDrag);
+    front.addEventListener('pointercancel', endDrag);
+    front.addEventListener('click', function(e){
+      if (state !== 'closed'){ closeSelf(); e.preventDefault(); e.stopPropagation(); }
+    });
+
+    return { close: closeSelf };
+  }
+
   function renderRows(){
     if (codes.length === 0){
       emptyState.hidden = false;
@@ -730,33 +1008,41 @@ footer{
     }
     countPill.textContent = codes.length;
 
+    closeOpenRow = null;
     rowsEl.innerHTML = '';
     for (var i = codes.length - 1; i >= 0; i--){
       (function(entry, displayIdx){
         var li = document.createElement('li');
         li.className = 'row';
 
+        var editBg = document.createElement('div');
+        editBg.className = 'row-edit-bg';
+        var editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'row-edit-btn';
+        editBtn.textContent = 'Modifica';
+        editBtn.setAttribute('aria-label', 'Modifica ' + entry.code);
+        editBg.appendChild(editBtn);
+
+        var deleteBg = document.createElement('div');
+        deleteBg.className = 'row-delete-bg';
+        var deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'row-delete-btn';
+        deleteBtn.textContent = 'Elimina';
+        deleteBtn.setAttribute('aria-label', 'Elimina ' + entry.code);
+        deleteBg.appendChild(deleteBtn);
+
+        var front = document.createElement('div');
+        front.className = 'row-front';
+
         var idx = document.createElement('span');
         idx.className = 'idx';
         idx.textContent = displayIdx;
 
-        var codeWrap = document.createElement('div');
-        codeWrap.className = 'code';
         var codeEl = document.createElement('code');
+        codeEl.className = 'code-text';
         codeEl.textContent = entry.code;
-        var meta = document.createElement('div');
-        meta.className = 'meta';
-        var fmtTag = document.createElement('span');
-        fmtTag.className = 'fmt-tag';
-        fmtTag.textContent = entry.format;
-        var timeSpan = document.createElement('span');
-        timeSpan.textContent = entry.qty > 1
-          ? (fmtTime(entry.firstTs) + ' → ' + fmtTime(entry.lastTs))
-          : fmtTime(entry.firstTs);
-        meta.appendChild(fmtTag);
-        meta.appendChild(timeSpan);
-        codeWrap.appendChild(codeEl);
-        codeWrap.appendChild(meta);
 
         var qtyEl = document.createElement('span');
         qtyEl.className = 'qty';
@@ -767,25 +1053,30 @@ footer{
           entry._bump = false;
         }
 
-        var delBtn = document.createElement('button');
-        delBtn.className = 'del';
-        delBtn.type = 'button';
-        delBtn.setAttribute('aria-label', 'Rimuovi codice');
-        delBtn.textContent = '✕';
-        delBtn.addEventListener('click', function(){
+        front.appendChild(idx);
+        front.appendChild(codeEl);
+        front.appendChild(qtyEl);
+
+        li.appendChild(editBg);
+        li.appendChild(deleteBg);
+        li.appendChild(front);
+        rowsEl.appendChild(li);
+
+        deleteBtn.addEventListener('click', function(){
           var realIndex = codes.indexOf(entry);
           if (realIndex > -1){
             delete seen[entry.code];
             codes.splice(realIndex, 1);
+            markChanged();
             renderRows();
           }
         });
 
-        li.appendChild(idx);
-        li.appendChild(codeWrap);
-        li.appendChild(qtyEl);
-        li.appendChild(delBtn);
-        rowsEl.appendChild(li);
+        var swipe = attachSwipe(li, front);
+        editBtn.addEventListener('click', function(){
+          swipe.close();
+          openEditFromList(entry);
+        });
       })(codes[i], i + 1);
     }
   }
@@ -808,16 +1099,30 @@ footer{
       renderRows();
       showToast(qtyToAdd > 1 ? ('Aggiunto: ' + code + ' × ' + qtyToAdd) : ('Aggiunto: ' + code));
     }
+    markChanged();
     if (navigator.vibrate) { try { navigator.vibrate(60); } catch(e){} }
   }
 
   manualAddBtn.addEventListener('click', function(){
-    addCode(manualInput.value, 'MANUALE', 1);
+    var qty = (mode === 'manuale') ? (manualQtyInput.value || '1') : 1;
+    addCode(manualInput.value, 'MANUALE', qty);
     manualInput.value = '';
+    if (mode === 'manuale'){ manualQtyInput.value = '1'; }
     manualInput.focus();
   });
   manualInput.addEventListener('keydown', function(e){
     if (e.key === 'Enter'){ manualAddBtn.click(); }
+  });
+  manualQtyInput.addEventListener('keydown', function(e){
+    if (e.key === 'Enter'){ manualAddBtn.click(); }
+  });
+  manualQtyInput.addEventListener('focus', function(){
+    this.select();
+  });
+  manualQtyInput.addEventListener('input', function(){
+    var digits = this.value.replace(/[^0-9]/g, '');
+    if (digits.length > 5){ digits = digits.slice(0, 5); }
+    this.value = digits;
   });
 
   // ---- Pannello di conferma (modalità Manuale) ----
@@ -864,7 +1169,7 @@ footer{
     confirmQtyValue = '1';
     confirmQtyFresh = true;
     renderConfirmQty();
-    confirmPanel.hidden = false;
+    confirmOverlay.hidden = false;
     reticle.hidden = true;
     setStatus('', 'In attesa di conferma quantità…');
   }
@@ -874,7 +1179,7 @@ footer{
       showToast('Lettura scartata: ' + pendingScan.code);
     }
     pendingScan = null;
-    confirmPanel.hidden = true;
+    confirmOverlay.hidden = true;
     if (scanning){
       reticle.hidden = false;
       setStatus('live', 'In ascolto…');
@@ -930,14 +1235,15 @@ footer{
     editQtyValue = String(entry.qty);
     editQtyFresh = true;
     renderEditQty();
-    editPanel.hidden = false;
+    editOverlay.hidden = false;
     reticle.hidden = true;
     setStatus('', 'Codice trovato — modifica in corso…');
   }
 
   function hideEditPanel(){
     pendingEdit = null;
-    editPanel.hidden = true;
+    editViaList = false;
+    editOverlay.hidden = true;
     editQtyError.textContent = '';
     if (scanning){
       reticle.hidden = false;
@@ -945,11 +1251,21 @@ footer{
     }
   }
 
+  // Apre il pannello di modifica direttamente da una riga dell'elenco (swipe a
+  // destra): non tocca la modalità attiva, resta quella in corso una volta chiuso.
+  function openEditFromList(entry){
+    editViaList = true;
+    showEditPanel(entry);
+  }
+
   // Torna alla modalità attiva prima di "Modifica" solo a modifica confermata
   // (salvataggio quantità o eliminazione), come richiesto: annullare resta in modalità Modifica.
+  // Se il pannello è stato aperto dall'elenco (swipe), la modalità non va toccata.
   function completeEdit(){
+    var wasFromList = editViaList;
+    editViaList = false;
     hideEditPanel();
-    activateMode(previousMode);
+    if (!wasFromList){ activateMode(previousMode); }
   }
 
   editSaveBtn.addEventListener('click', function(){
@@ -963,6 +1279,7 @@ footer{
     entry.qty = qty;
     entry.lastTs = new Date();
     entry._bump = true;
+    markChanged();
     renderRows();
     showToast('Quantità aggiornata: ' + entry.code + ' × ' + qty);
     completeEdit();
@@ -976,6 +1293,7 @@ footer{
     if (realIndex > -1){
       delete seen[entry.code];
       codes.splice(realIndex, 1);
+      markChanged();
       renderRows();
       showToast('Eliminato: ' + entry.code);
     }
@@ -988,12 +1306,36 @@ footer{
   });
 
   clearBtn.addEventListener('click', function(){
+    closeListMenu();
     if (codes.length === 0) return;
-    if (confirm('Svuotare l\'intero elenco dei codici raccolti?')){
-      codes = [];
-      seen = Object.create(null);
-      renderRows();
+    // L'avviso si adatta alla situazione: se l'elenco è già stato esportato e non
+    // ha subito modifiche da allora, il tono è più rassicurante; altrimenti avverte
+    // che ci sono dati non ancora esportati che andrebbero persi.
+    var alreadyExported = lastExportTs && (!lastChangeTs || lastExportTs >= lastChangeTs);
+    var n = codes.length;
+    if (alreadyExported){
+      clearTitle.classList.remove('strong');
+      clearMessage.classList.remove('strong');
+      clearMessage.textContent = 'L\'elenco risulta già esportato e non ha subito modifiche successive. Vuoi comunque eliminare tutti i ' + n + ' codici? L\'azione è irreversibile.';
+    } else {
+      clearTitle.classList.add('strong');
+      clearMessage.classList.add('strong');
+      clearMessage.textContent = 'Attenzione: l\'elenco non risulta esportato dopo le ultime modifiche. Eliminandolo perderai in modo irreversibile tutti i ' + n + ' codici raccolti.';
     }
+    clearOverlay.hidden = false;
+  });
+
+  clearConfirmBtn.addEventListener('click', function(){
+    codes = [];
+    seen = Object.create(null);
+    lastChangeTs = null;
+    lastExportTs = null;
+    renderRows();
+    clearOverlay.hidden = true;
+  });
+
+  clearCancelBtn.addEventListener('click', function(){
+    clearOverlay.hidden = true;
   });
 
   function csvEscape(value){
@@ -1015,6 +1357,7 @@ footer{
   }
 
   exportBtn.addEventListener('click', function(){
+    closeListMenu();
     if (codes.length === 0) return;
     var lines = ['codice;quantita;formato;prima_lettura;ultima_lettura'];
     var chronological = codes.slice().sort(function(a,b){ return a.firstTs - b.firstTs; });
@@ -1032,16 +1375,7 @@ footer{
     var stamp = isoLike(new Date()).replace(/[: ]/g, '-');
     var filename = 'codici_' + stamp + '.csv';
 
-    if (downloadsCap){
-      downloadsCap.save({ filename: filename, data: blob }).then(function(res){
-        if (res.status === 'saved'){
-          showToast('CSV salvato (' + codes.length + ' codici)');
-        }
-      }).catch(function(err){
-        if (err && err.code === 'declined'){ return; }
-        showToast('Salvataggio non riuscito: riprova');
-      });
-    } else {
+    function directDownload(){
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
       a.href = url;
@@ -1050,7 +1384,43 @@ footer{
       a.click();
       document.body.removeChild(a);
       setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+      markExported();
       showToast('CSV scaricato (' + codes.length + ' codici)');
+    }
+
+    if (downloadsCap){
+      downloadsCap.save({ filename: filename, data: blob }).then(function(res){
+        if (res.status === 'saved'){
+          markExported();
+          showToast('CSV salvato (' + codes.length + ' codici)');
+        }
+      }).catch(function(err){
+        if (err && err.code === 'declined'){ return; }
+        showToast('Salvataggio non riuscito: riprova');
+      });
+      return;
+    }
+
+    // Su iOS e Android non esiste una vera finestra "Salva con nome" per il
+    // web: la Web Share API apre il pannello di condivisione nativo, che
+    // include l'opzione "Salva in File" (iOS) o "Salva su Drive/dispositivo"
+    // (Android). Se l'utente annulla, non viene creato alcun file e l'elenco
+    // dei codici resta invariato: nessun errore da mostrare.
+    var file = null;
+    try { file = new File([blob], filename, { type: 'text/csv' }); } catch (e) { file = null; }
+
+    if (file && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })){
+      navigator.share({
+        files: [file],
+        title: filename
+      }).then(function(){
+        markExported();
+      }).catch(function(err){
+        if (err && err.name === 'AbortError'){ return; }
+        directDownload();
+      });
+    } else {
+      directDownload();
     }
   });
 
@@ -1102,6 +1472,8 @@ footer{
 
   function stopScanning(){
     scanning = false;
+    lastSeenCode = null;
+    missingSince = 0;
     if (pendingScan){ hideConfirmPanel(true); }
     if (pendingEdit){ hideEditPanel(); }
     if (codeReader) {
@@ -1118,11 +1490,14 @@ footer{
     torchBtn.hidden = true;
     torchOn = false;
     setStatus('', 'Fotocamera spenta');
-    toggleBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg> Avvia fotocamera';
+    toggleBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';
+    toggleBtn.setAttribute('aria-label', 'Avvia fotocamera');
+    toggleBtn.title = 'Avvia fotocamera';
   }
 
   function handleDecoded(result){
     if (!result) return;
+    if (pendingEdit) return; // una modifica (da fotocamera o dall'elenco) è già in corso
     var text = result.getText ? result.getText() : String(result);
     var formatName = 'CODICE';
     try {
@@ -1158,11 +1533,12 @@ footer{
       return;
     }
 
-    // Modalità Scanner: aggiunge/conta subito, con un breve blocco per evitare
-    // di contare più volte lo stesso codice mentre resta inquadrato.
-    var now = performance.now();
-    if (now < scannerCooldownUntil) return;
-    scannerCooldownUntil = now + SCANNER_COOLDOWN_MS;
+    // Modalità Scanner: aggiunge/conta subito, ma non riconta lo stesso codice
+    // finché resta ininterrottamente inquadrato. Si riarma (vedi il callback di
+    // decodeFromConstraints) solo dopo che la fotocamera smette di rilevarlo
+    // per un breve periodo, segno che è uscito dall'inquadratura.
+    if (text === lastSeenCode){ tickFps(); return; }
+    lastSeenCode = text;
     addCode(text, formatName, 1);
     tickFps();
   }
@@ -1202,9 +1578,16 @@ footer{
 
     codeReader.decodeFromConstraints(constraints, video, function(result, err){
       if (result){
+        missingSince = 0;
         handleDecoded(result);
+      } else if (mode === 'scanner') {
+        // NotFoundException fires continuamente quando non c'è nessun codice
+        // inquadrato: se questa assenza dura abbastanza, consideriamo l'ultimo
+        // codice uscito dall'inquadratura e lo riarmiamo per una nuova lettura.
+        var nowTs = performance.now();
+        if (!missingSince) { missingSince = nowTs; }
+        else if (nowTs - missingSince > RESCAN_GRACE_MS) { lastSeenCode = null; }
       }
-      // NotFoundException fires continuously while no code is in view; ignore it.
     }).then(function(){
       stream = video.srcObject;
       scanning = true;
@@ -1218,7 +1601,9 @@ footer{
         var settings = track.getSettings ? track.getSettings() : {};
         currentDeviceId = settings.deviceId || deviceId || null;
       });
-      toggleBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg> Ferma fotocamera';
+      toggleBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+      toggleBtn.setAttribute('aria-label', 'Ferma fotocamera');
+      toggleBtn.title = 'Ferma fotocamera';
     }).catch(function(err){
       console.error(err);
       scanning = false;
@@ -1227,7 +1612,9 @@ footer{
       if (err && err.name === 'NotFoundError') msg = 'Nessuna fotocamera trovata';
       setStatus('err', msg);
       showToast(msg);
-      toggleBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg> Avvia fotocamera';
+      toggleBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';
+      toggleBtn.setAttribute('aria-label', 'Avvia fotocamera');
+      toggleBtn.title = 'Avvia fotocamera';
     });
   }
 

@@ -1,4 +1,4 @@
-# Scanner Codici CSV
+# Lettore codici
 
 PWA (Progressive Web App) che legge codici a barre e QR code tramite la fotocamera del dispositivo e genera un elenco esportabile in CSV, con conteggio automatico delle quantità.
 
@@ -6,14 +6,15 @@ Nessun backend, nessuna dipendenza da installare: è un'unica pagina HTML che fu
 
 ## Funzionalità
 
-- **Tre modalità di lettura**, selezionabili dall'interfaccia:
+- **Due modalità di lettura**, selezionabili dall'interfaccia:
   - **Scanner** — ogni codice letto viene aggiunto (o la sua quantità incrementata di 1) subito; la fotocamera resta pronta per la lettura successiva (con un breve blocco anti-doppia-lettura).
-  - **Manuale** — dopo la lettura la fotocamera si mette in pausa e propone un tastierino numerico per digitare la quantità da aggiungere; solo dopo la conferma la fotocamera torna pronta.
-  - **Modifica** — attende la lettura di un codice già presente in elenco, poi permette di correggerne la quantità (tramite tastierino; non è consentito impostarla a 0) oppure di eliminarlo. Confermata la modifica, torna attiva la modalità precedente (Scanner o Manuale).
+  - **Manuale** — dopo la lettura la fotocamera si mette in pausa e propone un tastierino numerico per digitare la quantità da aggiungere; solo dopo la conferma la fotocamera torna pronta. Anche l'inserimento manuale del codice (senza fotocamera) mostra il campo quantità in questa modalità.
+- **Modifica direttamente dall'elenco**: scorrendo una riga verso destra compare "Modifica" per correggere la quantità o eliminare il codice, senza cambiare la modalità attiva. Scorrendo verso sinistra compare "Elimina".
 - **Interruttore lettura QR code**: un pulsante dedicato permette di disattivare/riattivare al volo il riconoscimento dei QR code, lasciando attivi solo i formati a barre.
 - **Conteggio quantità**: se lo stesso codice viene letto più volte, non crea righe duplicate ma incrementa la quantità.
-- **Inserimento manuale via testo**, per aggiungere un codice senza fotocamera.
-- **Esportazione CSV** con colonne: `codice`, `quantita`, `formato`, `prima_lettura`, `ultima_lettura`.
+- **Inserimento manuale via testo**, per aggiungere un codice senza fotocamera (tastiera numerica di default).
+- **Menu "Elenco"**: raccoglie "Esporta CSV" e "Svuota elenco"; quest'ultimo mostra un avviso diverso a seconda che l'elenco sia già stato esportato o meno.
+- **Esportazione CSV** con colonne: `codice`, `quantita`, `formato`, `prima_lettura`, `ultima_lettura`; su iOS/Android si apre il pannello di condivisione nativo per scegliere dove salvare il file.
 - **Cambio fotocamera** (frontale/posteriore) e **torcia**, se supportate dal dispositivo.
 - Interfaccia in stile iOS (colori chiari, angoli molto arrotondati, tastierino numerico circolare), con supporto al tema scuro di sistema.
 - Installabile come app (PWA) su smartphone e desktop, con funzionamento offline di base grazie al service worker incluso.

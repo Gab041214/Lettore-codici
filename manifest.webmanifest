@@ -1,6 +1,6 @@
 {
-  "name": "Scanner Codici CSV",
-  "short_name": "Scanner CSV",
+  "name": "Lettore codici",
+  "short_name": "Lettore codici",
   "description": "Scansiona codici a barre e QR con la fotocamera ed esportali in un file CSV con quantità.",
   "start_url": "./index.html",
   "scope": "./",
