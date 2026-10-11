@@ -24,7 +24,7 @@
   /* Palette in stile iOS (light): sfondo "grouped", card bianche, blu di sistema */
   --bg:#f2f2f7;
   --surface:#ffffff;
-  --surface-alt:#eeeef2;
+  --surface-alt:#e2e2e8;
   --ink:#1c1c1e;
   --ink-soft:#8a8a8e;
   --line:#e5e5ea;
@@ -171,7 +171,6 @@ video{
 .status-left{display:flex;align-items:center;gap:8px;min-width:0}
 .status-left span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-.controls{display:flex;gap:10px;flex-wrap:wrap}
 button{
   font-family:var(--sans);
   font-size:0.95rem;
@@ -209,15 +208,16 @@ button svg{flex-shrink:0}
   display:flex;
   background:var(--surface-alt);
   border-radius:var(--r-md);
-  padding:3px;
+  padding:0 3px;
   gap:2px;
 }
 .mode-toggle button{
   flex:1;
   min-width:0;
+  height:36px;
   border:none;
   border-radius:11px;
-  padding:8px 4px;
+  padding:0 4px;
   background:transparent;
   color:var(--ink-soft);
   font-weight:600;
@@ -258,7 +258,7 @@ button svg{flex-shrink:0}
 .qr-toggle{
   flex:0 0 auto;
   width:38px;
-  height:auto;
+  height:36px;
   padding:0;
   justify-content:center;
   background:var(--surface-alt);
@@ -272,15 +272,16 @@ button svg{flex-shrink:0}
 }
 .qr-toggle[aria-pressed="true"] .qr-slash{opacity:1}
 
-.list-menu{position:relative;flex:1;min-width:0}
+.list-menu{position:relative;flex:1;min-width:0;display:flex;align-items:stretch}
 .list-menu-btn{
   width:100%;
   min-width:0;
+  height:36px;
   background:var(--surface-alt);
   color:var(--ink-soft);
   justify-content:center;
   gap:4px;
-  padding:8px 6px;
+  padding:0 6px;
   font-size:0.74rem;
   white-space:nowrap;
   overflow:hidden;
@@ -744,14 +745,6 @@ footer{
     </button>
   </div>
 
-  <div class="controls">
-    <button id="switchCamBtn" type="button" hidden>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-      Cambia fotocamera
-    </button>
-    <button id="torchBtn" type="button" hidden>Flash</button>
-  </div>
-
   <section class="list-card">
     <div class="list-head">
       <h2>Codici raccolti</h2>
@@ -776,8 +769,6 @@ footer{
   var statusText = document.getElementById('statusText');
   var fpsEl = document.getElementById('fps');
   var toggleBtn = document.getElementById('toggleBtn');
-  var switchCamBtn = document.getElementById('switchCamBtn');
-  var torchBtn = document.getElementById('torchBtn');
   var manualInput = document.getElementById('manualInput');
   var manualQtyInput = document.getElementById('manualQtyInput');
   var manualAddBtn = document.getElementById('manualAddBtn');
@@ -828,9 +819,6 @@ footer{
   var scanning = false;
   var stream = null;
   var codeReader = null;
-  var currentDeviceId = null;
-  var videoDevices = [];
-  var torchOn = false;
   var toastTimer = null;
 
   var mode = 'scanner';           // 'scanner' | 'manuale' | 'modifica'
@@ -886,9 +874,8 @@ footer{
     // Il motore ZXing non accetta un cambio di formati "a caldo": se la fotocamera
     // è già in ascolto va riavviata per applicare subito la nuova lista di formati.
     if (scanning){
-      var deviceToResume = currentDeviceId;
       stopScanningKeepUI();
-      startScanning(deviceToResume);
+      startScanning();
     }
   });
 
@@ -1442,34 +1429,6 @@ footer{
     }
   }
 
-  function applyTorchSupport(){
-    try {
-      var track = stream && stream.getVideoTracks && stream.getVideoTracks()[0];
-      var caps = track && track.getCapabilities ? track.getCapabilities() : null;
-      torchBtn.hidden = !(caps && caps.torch);
-    } catch(e){
-      torchBtn.hidden = true;
-    }
-  }
-
-  torchBtn.addEventListener('click', function(){
-    try {
-      var track = stream.getVideoTracks()[0];
-      torchOn = !torchOn;
-      track.applyConstraints({ advanced: [{ torch: torchOn }] });
-      torchBtn.textContent = torchOn ? 'Flash: on' : 'Flash: off';
-    } catch(e){
-      showToast('Flash non disponibile su questo dispositivo');
-    }
-  });
-
-  function listCameras(){
-    return navigator.mediaDevices.enumerateDevices().then(function(devices){
-      videoDevices = devices.filter(function(d){ return d.kind === 'videoinput'; });
-      switchCamBtn.hidden = videoDevices.length < 2;
-    }).catch(function(){});
-  }
-
   function stopScanning(){
     scanning = false;
     lastSeenCode = null;
@@ -1487,8 +1446,6 @@ footer{
     placeholder.hidden = false;
     reticle.hidden = true;
     fpsEl.textContent = '';
-    torchBtn.hidden = true;
-    torchOn = false;
     setStatus('', 'Fotocamera spenta');
     toggleBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';
     toggleBtn.setAttribute('aria-label', 'Avvia fotocamera');
@@ -1543,7 +1500,7 @@ footer{
     tickFps();
   }
 
-  function startScanning(deviceId){
+  function startScanning(){
     if (!window.ZXing){
       setStatus('err', 'Libreria di scansione non disponibile');
       showToast('Impossibile caricare il motore di scansione');
@@ -1572,9 +1529,7 @@ footer{
 
     codeReader = new window.ZXing.BrowserMultiFormatReader(hints);
 
-    var constraints = deviceId
-      ? { video: { deviceId: { exact: deviceId } } }
-      : { video: { facingMode: { ideal: 'environment' } } };
+    var constraints = { video: { facingMode: { ideal: 'environment' } } };
 
     codeReader.decodeFromConstraints(constraints, video, function(result, err){
       if (result){
@@ -1595,12 +1550,6 @@ footer{
       reticle.hidden = false;
       setStatus('live', 'In ascolto…');
       startFpsCounter();
-      applyTorchSupport();
-      listCameras().then(function(){
-        var track = stream.getVideoTracks()[0];
-        var settings = track.getSettings ? track.getSettings() : {};
-        currentDeviceId = settings.deviceId || deviceId || null;
-      });
       toggleBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
       toggleBtn.setAttribute('aria-label', 'Ferma fotocamera');
       toggleBtn.title = 'Ferma fotocamera';
@@ -1622,18 +1571,8 @@ footer{
     if (scanning){
       stopScanning();
     } else {
-      startScanning(currentDeviceId);
+      startScanning();
     }
-  });
-
-  switchCamBtn.addEventListener('click', function(){
-    if (videoDevices.length < 2) return;
-    if (pendingScan){ hideConfirmPanel(true); }
-    if (pendingEdit){ hideEditPanel(); }
-    var idx = videoDevices.findIndex(function(d){ return d.deviceId === currentDeviceId; });
-    var next = videoDevices[(idx + 1) % videoDevices.length];
-    stopScanningKeepUI();
-    startScanning(next.deviceId);
   });
 
   function stopScanningKeepUI(){
