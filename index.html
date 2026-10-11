@@ -208,13 +208,13 @@ button svg{flex-shrink:0}
   display:flex;
   background:var(--surface-alt);
   border-radius:var(--r-md);
-  padding:0 3px;
+  padding:3px;
   gap:2px;
 }
 .mode-toggle button{
   flex:1;
   min-width:0;
-  height:36px;
+  height:30px;
   border:none;
   border-radius:11px;
   padding:0 4px;
@@ -322,7 +322,6 @@ button svg{flex-shrink:0}
 .list-menu-item:disabled{opacity:0.4}
 .list-menu-item.danger-item{color:var(--danger)}
 
-.mode-hint{font-size:0.8rem;color:var(--ink-soft);line-height:1.5;margin:0}
 
 .modal-overlay{
   position:fixed;
@@ -633,8 +632,6 @@ footer{
     </div>
   </div>
 
-  <p id="modeHint" class="mode-hint">Modalità Scanner: ogni codice letto viene aggiunto (o conteggiato) subito e la fotocamera resta pronta per la lettura successiva.</p>
-
   <div class="scanner-card">
     <div class="video-box">
       <video id="video" playsinline muted></video>
@@ -783,7 +780,6 @@ footer{
   var qrToggleBtn = document.getElementById('qrToggleBtn');
   var listMenuBtn = document.getElementById('listMenuBtn');
   var listMenuDropdown = document.getElementById('listMenuDropdown');
-  var modeHint = document.getElementById('modeHint');
   var confirmOverlay = document.getElementById('confirmOverlay');
   var confirmPanel = document.getElementById('confirmPanel');
   var confirmCode = document.getElementById('confirmCode');
@@ -832,17 +828,10 @@ footer{
   var editCooldownUntil = 0;      // throttle for modalità modifica (evita riletture accidentali)
   var EDIT_COOLDOWN_MS = 1300;
 
-  var MODE_HINTS = {
-    scanner: 'Il codice viene subito aggiunto all\'elenco.',
-    manuale: 'Il codice viene aggiunto all\'elenco solo dopo aver confermato la quantità.',
-    modifica: 'Modalità Modifica: leggi un codice già presente per correggerne la quantità o eliminarlo.'
-  };
-
   function setMode(next){
     mode = next;
     modeScannerBtn.setAttribute('aria-pressed', mode === 'scanner' ? 'true' : 'false');
     modeManualBtn.setAttribute('aria-pressed', mode === 'manuale' ? 'true' : 'false');
-    modeHint.textContent = MODE_HINTS[mode];
     if (mode === 'manuale'){
       manualQtyInput.hidden = false;
       manualQtyInput.value = '1';
