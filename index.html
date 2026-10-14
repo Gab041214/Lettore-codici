@@ -1329,6 +1329,11 @@ footer{
   function isoLike(d){
     return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+' '+pad2(d.getHours())+':'+pad2(d.getMinutes())+':'+pad2(d.getSeconds());
   }
+  function filenameStamp(d){
+    // Formato compatto per il nome del file: AAMMGG-OOMM (anno a due cifre)
+    var yy = pad2(d.getFullYear() % 100);
+    return yy+pad2(d.getMonth()+1)+pad2(d.getDate())+'-'+pad2(d.getHours())+pad2(d.getMinutes());
+  }
 
   var downloadsCap = null;
   if (window.claude && typeof window.claude.use === 'function'){
@@ -1342,7 +1347,9 @@ footer{
     var chronological = codes.slice().sort(function(a,b){ return a.firstTs - b.firstTs; });
     chronological.forEach(function(entry){
       lines.push([
-        csvEscape(entry.code),
+        // Il codice viene scritto come formula ="..." così Excel e Numbers
+        // lo trattano come testo e non tolgono gli eventuali zeri iniziali.
+        csvEscape('="' + entry.code + '"'),
         csvEscape(entry.qty),
         csvEscape(entry.format),
         csvEscape(isoLike(entry.firstTs)),
@@ -1351,8 +1358,7 @@ footer{
     });
     var csvContent = '﻿' + lines.join('\r\n');
     var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    var stamp = isoLike(new Date()).replace(/[: ]/g, '-');
-    var filename = 'codici_' + stamp + '.csv';
+    var filename = 'codici_' + filenameStamp(new Date()) + '.csv';
 
     function directDownload(){
       var url = URL.createObjectURL(blob);
