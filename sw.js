@@ -2,7 +2,7 @@
 // e un funzionamento offline di base (l'unica cosa che richiede rete è la
 // libreria ZXing caricata da CDN al primo avvio).
 
-const CACHE_NAME = 'scanner-codici-csv-v1';
+const CACHE_NAME = 'scanner-codici-csv-v2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -40,6 +40,28 @@ self.addEventListener('fetch', (event) => {
   // Solo richieste GET vengono gestite dalla cache.
   if (req.method !== 'GET') return;
 
+  // Le richieste di navigazione (apertura/aggiornamento della pagina) usano
+  // una strategia "network-first": si prova sempre a scaricare la versione
+  // più recente dal server, così un deploy su GitHub Pages arriva subito
+  // anche a chi ha già installato la PWA, senza restare bloccati su una
+  // copia vecchia in cache. Si usa la cache solo se la rete non è disponibile.
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const resClone = res.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            try { cache.put(req, resClone); } catch (e) { /* ignora */ }
+          });
+          return res;
+        })
+        .catch(() => caches.match(req).then((cached) => cached || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // Tutte le altre risorse (icone, manifest, librerie da CDN) restano
+  // "cache-first" per un avvio rapido e il funzionamento offline.
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;
@@ -54,14 +76,7 @@ self.addEventListener('fetch', (event) => {
           });
           return res;
         })
-        .catch(() => {
-          // Offline e nessuna cache disponibile: per la navigazione mostra
-          // almeno la shell dell'app già scaricata in precedenza.
-          if (req.mode === 'navigate') {
-            return caches.match('./index.html');
-          }
-          return undefined;
-        });
+        .catch(() => undefined);
     })
   );
 });
