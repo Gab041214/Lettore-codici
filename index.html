@@ -426,7 +426,7 @@ button.ghost{background:var(--surface-alt);color:var(--ink-soft)}
   flex:1;
   min-width:0;
   font-family:var(--sans);
-  font-size:0.95rem;
+  font-size:1rem;
   padding:12px 14px;
   border-radius:var(--r-md);
   border:none;
@@ -451,7 +451,7 @@ button.ghost{background:var(--surface-alt);color:var(--ink-soft)}
   font-family:var(--mono);
   font-variant-numeric:tabular-nums;
   font-weight:700;
-  font-size:0.95rem;
+  font-size:1rem;
   padding:12px 4px;
   border-radius:var(--r-md);
   border:none;
@@ -1396,8 +1396,7 @@ footer{
 
     if (file && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })){
       navigator.share({
-        files: [file],
-        title: filename
+        files: [file]
       }).then(function(){
         markExported();
       }).catch(function(err){
