@@ -52,6 +52,7 @@
   --j-ring:rgba(40,40,60,0.26);
   --j-glow-a:#fff;
   --j-glow-b:#fff;
+  --j-line:#fff;
   --n-drop:0 1px 2px rgba(30,30,50,0.14), 0 8px 20px rgba(30,30,50,0.10);
   --mono: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
@@ -88,7 +89,7 @@
     --j-fill-strong:linear-gradient(180deg,rgba(240,240,255,0.88) 0%,rgba(145,145,165,0.46) 10%,rgba(120,120,140,0.34) 50%,rgba(145,145,165,0.46) 90%,rgba(230,230,250,0.82) 100%);
     --j-ring:rgba(255,255,255,0.26);
     --j-glow-a:rgba(255,255,255,0.8);
-    --j-glow-b:rgba(255,255,255,0.7);
+    --j-glow-b:rgba(255,255,255,0.7);--j-line:rgba(255,255,255,0.95);
     --n-drop:0 1px 2px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.45);
   }
 }
@@ -120,7 +121,7 @@
   --j-fill-strong:linear-gradient(180deg,rgba(240,240,255,0.88) 0%,rgba(145,145,165,0.46) 10%,rgba(120,120,140,0.34) 50%,rgba(145,145,165,0.46) 90%,rgba(230,230,250,0.82) 100%);
   --j-ring:rgba(255,255,255,0.26);
   --j-glow-a:rgba(255,255,255,0.8);
-  --j-glow-b:rgba(255,255,255,0.7);
+  --j-glow-b:rgba(255,255,255,0.7);--j-line:rgba(255,255,255,0.95);
   --n-drop:0 1px 2px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.45);
 }
 *{box-sizing:border-box}
@@ -712,7 +713,9 @@ footer{
   border-color:var(--j-ring);
   border-width:0.33px 1px;
   box-shadow:var(--n-drop),
+    inset 0 1px 0 0 var(--j-line), inset 0 2px 1.5px -1px var(--j-line),
     inset 0 2px 2px -1px var(--j-glow-a), inset 0 3px 4px -2px var(--j-glow-b),
+    inset 0 -1px 0 0 var(--j-line), inset 0 -2px 1.5px -1px var(--j-line),
     inset 0 -2px 2px -1px var(--j-glow-a), inset 0 -3px 4px -2px var(--j-glow-b);
 }
 .list-menu-btn[aria-expanded="true"]{background:var(--j-fill-strong)}
@@ -729,7 +732,9 @@ footer{
   border-color:var(--j-ring);
   border-width:0.33px 1px;
   box-shadow:0 18px 48px rgba(20,20,40,0.28),
+    inset 0 1px 0 0 var(--j-line), inset 0 2px 1.5px -1px var(--j-line),
     inset 0 2px 2px -1px var(--j-glow-a), inset 0 4px 5px -2px var(--j-glow-b),
+    inset 0 -1px 0 0 var(--j-line), inset 0 -2px 1.5px -1px var(--j-line),
     inset 0 -2px 2px -1px var(--j-glow-a), inset 0 -4px 5px -2px var(--j-glow-b);
 }
 </style>
