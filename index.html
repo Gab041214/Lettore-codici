@@ -53,6 +53,8 @@
   --j-glow-a:#fff;
   --j-glow-b:#fff;
   --j-line:#fff;
+  --j-off:#a2a2b0;
+  --j-pill:rgba(60,60,80,0.11);
   --n-drop:0 1px 2px rgba(30,30,50,0.14), 0 8px 20px rgba(30,30,50,0.10);
   --mono: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
@@ -85,11 +87,11 @@
     --glass-edge-low:rgba(255,255,255,0.06);
     --glass-shadow:0 6px 18px rgba(0,0,0,0.45);
     --row:rgba(120,120,135,0.22);
-    --j-fill:linear-gradient(180deg,rgba(235,235,255,0.82) 0%,rgba(140,140,160,0.34) 11%,rgba(110,110,130,0.18) 50%,rgba(140,140,160,0.34) 89%,rgba(225,225,245,0.76) 100%);
-    --j-fill-strong:linear-gradient(180deg,rgba(240,240,255,0.88) 0%,rgba(145,145,165,0.46) 10%,rgba(120,120,140,0.34) 50%,rgba(145,145,165,0.46) 90%,rgba(230,230,250,0.82) 100%);
-    --j-ring:rgba(255,255,255,0.26);
-    --j-glow-a:rgba(255,255,255,0.8);
-    --j-glow-b:rgba(255,255,255,0.7);--j-line:rgba(255,255,255,0.95);
+    --j-fill:linear-gradient(180deg,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0.06) 12%,rgba(255,255,255,0.045) 50%,rgba(255,255,255,0.06) 88%,rgba(255,255,255,0.10) 100%);
+    --j-fill-strong:linear-gradient(180deg,rgba(255,255,255,0.17) 0%,rgba(255,255,255,0.12) 12%,rgba(255,255,255,0.10) 50%,rgba(255,255,255,0.12) 88%,rgba(255,255,255,0.17) 100%);
+    --j-ring:rgba(255,255,255,0.11);
+    --j-glow-a:rgba(255,255,255,0.07);
+    --j-glow-b:rgba(255,255,255,0.035);--j-line:rgba(255,255,255,0.12);--j-off:#7c7c92;--j-pill:rgba(255,255,255,0.12);
     --n-drop:0 1px 2px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.45);
   }
 }
@@ -117,11 +119,11 @@
   --glass-edge-low:rgba(255,255,255,0.06);
   --glass-shadow:0 6px 18px rgba(0,0,0,0.45);
   --row:rgba(120,120,135,0.22);
-  --j-fill:linear-gradient(180deg,rgba(235,235,255,0.82) 0%,rgba(140,140,160,0.34) 11%,rgba(110,110,130,0.18) 50%,rgba(140,140,160,0.34) 89%,rgba(225,225,245,0.76) 100%);
-  --j-fill-strong:linear-gradient(180deg,rgba(240,240,255,0.88) 0%,rgba(145,145,165,0.46) 10%,rgba(120,120,140,0.34) 50%,rgba(145,145,165,0.46) 90%,rgba(230,230,250,0.82) 100%);
-  --j-ring:rgba(255,255,255,0.26);
-  --j-glow-a:rgba(255,255,255,0.8);
-  --j-glow-b:rgba(255,255,255,0.7);--j-line:rgba(255,255,255,0.95);
+  --j-fill:linear-gradient(180deg,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0.06) 12%,rgba(255,255,255,0.045) 50%,rgba(255,255,255,0.06) 88%,rgba(255,255,255,0.10) 100%);
+  --j-fill-strong:linear-gradient(180deg,rgba(255,255,255,0.17) 0%,rgba(255,255,255,0.12) 12%,rgba(255,255,255,0.10) 50%,rgba(255,255,255,0.12) 88%,rgba(255,255,255,0.17) 100%);
+  --j-ring:rgba(255,255,255,0.11);
+  --j-glow-a:rgba(255,255,255,0.07);
+  --j-glow-b:rgba(255,255,255,0.035);--j-line:rgba(255,255,255,0.12);--j-off:#7c7c92;--j-pill:rgba(255,255,255,0.12);
   --n-drop:0 1px 2px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.45);
 }
 *{box-sizing:border-box}
@@ -736,6 +738,20 @@ footer{
     inset 0 2px 2px -1px var(--j-glow-a), inset 0 4px 5px -2px var(--j-glow-b),
     inset 0 -1px 0 0 var(--j-line), inset 0 -2px 1.5px -1px var(--j-line),
     inset 0 -2px 2px -1px var(--j-glow-a), inset 0 -4px 5px -2px var(--j-glow-b);
+}
+/* ===== Pulsanti neutri: testo nero, niente blu, modalità attiva in pillola grigia ===== */
+.mode-toggle{padding:3px;gap:0}
+.mode-toggle button{color:var(--j-off);font-weight:500}
+.mode-toggle button[aria-pressed="true"]{background:var(--j-pill);color:var(--ink);font-weight:700;box-shadow:none}
+.qr-toggle,.list-menu-btn,.icon-btn,.list-menu-btn[aria-expanded="true"]{color:var(--ink)}
+.qr-toggle[aria-pressed="true"]{color:var(--danger)}
+.status-action.start,button.primary{
+  background:var(--j-fill);color:var(--ink);border-style:solid;border-color:var(--j-ring);border-width:0.33px 1px;
+  box-shadow:var(--n-drop),
+    inset 0 1px 0 0 var(--j-line), inset 0 2px 1.5px -1px var(--j-line),
+    inset 0 2px 2px -1px var(--j-glow-a), inset 0 3px 4px -2px var(--j-glow-b),
+    inset 0 -1px 0 0 var(--j-line), inset 0 -2px 1.5px -1px var(--j-line),
+    inset 0 -2px 2px -1px var(--j-glow-a), inset 0 -3px 4px -2px var(--j-glow-b);
 }
 </style>
 </head>
