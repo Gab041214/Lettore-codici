@@ -46,6 +46,13 @@
   --glass-edge-low:rgba(0,0,0,0.07);
   --glass-shadow:0 6px 18px rgba(30,40,80,0.10), 0 1px 2px rgba(30,40,80,0.08);
   --row:rgba(255,255,255,0.7);
+  /* Effetto vetro: contorno sottile, luce interna, ombra morbida */
+  --n-fill:linear-gradient(180deg,rgba(255,255,255,0.78) 0%,rgba(255,255,255,0.58) 100%);
+  --n-fill-strong:linear-gradient(180deg,rgba(255,255,255,0.86) 0%,rgba(255,255,255,0.70) 100%);
+  --n-ring:rgba(40,40,60,0.20);
+  --n-hi:rgba(255,255,255,0.85);
+  --n-shade:rgba(40,40,60,0.07);
+  --n-drop:0 1px 2px rgba(30,30,50,0.14), 0 8px 20px rgba(30,30,50,0.10);
   --mono: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
   --r-lg:20px;
@@ -77,6 +84,12 @@
     --glass-edge-low:rgba(255,255,255,0.06);
     --glass-shadow:0 6px 18px rgba(0,0,0,0.45);
     --row:rgba(120,120,135,0.22);
+    --n-fill:linear-gradient(180deg,rgba(150,150,170,0.38) 0%,rgba(110,110,130,0.26) 100%);
+    --n-fill-strong:linear-gradient(180deg,rgba(160,160,180,0.50) 0%,rgba(120,120,140,0.38) 100%);
+    --n-ring:rgba(255,255,255,0.14);
+    --n-hi:rgba(255,255,255,0.30);
+    --n-shade:rgba(0,0,0,0.25);
+    --n-drop:0 1px 2px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.45);
   }
 }
 :root[data-theme="dark"]{
@@ -103,6 +116,12 @@
   --glass-edge-low:rgba(255,255,255,0.06);
   --glass-shadow:0 6px 18px rgba(0,0,0,0.45);
   --row:rgba(120,120,135,0.22);
+  --n-fill:linear-gradient(180deg,rgba(150,150,170,0.38) 0%,rgba(110,110,130,0.26) 100%);
+  --n-fill-strong:linear-gradient(180deg,rgba(160,160,180,0.50) 0%,rgba(120,120,140,0.38) 100%);
+  --n-ring:rgba(255,255,255,0.14);
+  --n-hi:rgba(255,255,255,0.30);
+  --n-shade:rgba(0,0,0,0.25);
+  --n-drop:0 1px 2px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.45);
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -400,7 +419,7 @@ button svg{flex-shrink:0}
 .modal-overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.38);
+  background:rgba(0,0,0,0.25);
   backdrop-filter:blur(6px);
   -webkit-backdrop-filter:blur(6px);
   display:flex;
@@ -675,6 +694,31 @@ li.row .qty.bumped{animation:bump 0.3s ease}
 
 footer{
   text-align:center;font-size:0.75rem;color:var(--ink-soft);padding-top:4px;
+}
+/* ===== Effetto vetro iOS 27 =====
+   Contorno scuro sottile all'esterno, luce bianca all'interno, sfumatura verticale,
+   leggero incavo sul fondo e ombra morbida. Da tenere in fondo per prevalere sulle regole sopra. */
+.mode-toggle,
+.qr-toggle,
+.list-menu-btn,
+.action-row input,
+.icon-btn,
+.qty-input,
+.status-action.stop{
+  background:var(--n-fill);
+  border:1px solid var(--n-hi);
+  box-shadow:0 0 0 1px var(--n-ring), var(--n-drop), inset 0 -3px 8px var(--n-shade), inset 0 2px 3px var(--n-hi);
+}
+.list-menu-btn[aria-expanded="true"]{background:var(--n-fill-strong)}
+.scanner-card{
+  border:1px solid var(--n-hi);
+  box-shadow:0 0 0 1px var(--n-ring), var(--n-drop);
+}
+.list-menu-dropdown,
+.confirm-panel{
+  background:var(--n-fill-strong);
+  border:1px solid var(--n-hi);
+  box-shadow:0 0 0 1px var(--n-ring), 0 18px 48px rgba(20,20,40,0.28), inset 0 -3px 8px color-mix(in srgb, var(--n-shade) 45%, transparent), inset 0 2px 4px var(--n-hi);
 }
 </style>
 </head>
