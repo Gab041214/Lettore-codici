@@ -53,6 +53,7 @@
   --j-glow-a:#fff;
   --j-glow-b:#fff;
   --j-line:#fff;
+  --j-pl:transparent;--j-pa:transparent;--j-pb:transparent;
   --j-ring-x:rgba(40,40,60,0.26);
   --j-lw:1px;
   --j-off:#a2a2b0;
@@ -89,11 +90,11 @@
     --glass-edge-low:rgba(255,255,255,0.06);
     --glass-shadow:0 6px 18px rgba(0,0,0,0.45);
     --row:rgba(128,128,128,0.22);
-    --j-fill:linear-gradient(180deg,rgba(255,255,255,0.22) 0%,rgba(255,255,255,0.17) 14%,rgba(255,255,255,0.145) 50%,rgba(255,255,255,0.16) 86%,rgba(255,255,255,0.19) 100%);
+    --j-fill:linear-gradient(180deg,rgba(255,255,255,0.165) 0%,rgba(255,255,255,0.12) 14%,rgba(255,255,255,0.095) 50%,rgba(255,255,255,0.11) 86%,rgba(255,255,255,0.14) 100%);
     --j-fill-strong:linear-gradient(180deg,rgba(255,255,255,0.17) 0%,rgba(255,255,255,0.12) 12%,rgba(255,255,255,0.10) 50%,rgba(255,255,255,0.12) 88%,rgba(255,255,255,0.17) 100%);
     --j-ring:rgba(255,255,255,0.16);--j-ring-x:rgba(255,255,255,0.035);--j-lw:0.5px;
-    --j-glow-a:rgba(255,255,255,0.09);
-    --j-glow-b:rgba(255,255,255,0.04);--j-line:rgba(255,255,255,0.2);--j-off:#8a8a91;--j-pill:rgba(0,0,0,0.42);
+    --j-glow-a:transparent;
+    --j-glow-b:transparent;--j-line:transparent;--j-pl:rgba(255,255,255,0.2);--j-pa:rgba(255,255,255,0.09);--j-pb:rgba(255,255,255,0.04);--j-off:#8a8a91;--j-pill:rgba(0,0,0,0.42);
     --n-drop:0 1px 2px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.45);
   }
 }
@@ -121,11 +122,11 @@
   --glass-edge-low:rgba(255,255,255,0.06);
   --glass-shadow:0 6px 18px rgba(0,0,0,0.45);
   --row:rgba(128,128,128,0.22);
-  --j-fill:linear-gradient(180deg,rgba(255,255,255,0.22) 0%,rgba(255,255,255,0.17) 14%,rgba(255,255,255,0.145) 50%,rgba(255,255,255,0.16) 86%,rgba(255,255,255,0.19) 100%);
+  --j-fill:linear-gradient(180deg,rgba(255,255,255,0.165) 0%,rgba(255,255,255,0.12) 14%,rgba(255,255,255,0.095) 50%,rgba(255,255,255,0.11) 86%,rgba(255,255,255,0.14) 100%);
   --j-fill-strong:linear-gradient(180deg,rgba(255,255,255,0.17) 0%,rgba(255,255,255,0.12) 12%,rgba(255,255,255,0.10) 50%,rgba(255,255,255,0.12) 88%,rgba(255,255,255,0.17) 100%);
   --j-ring:rgba(255,255,255,0.16);--j-ring-x:rgba(255,255,255,0.035);--j-lw:0.5px;
-  --j-glow-a:rgba(255,255,255,0.09);
-  --j-glow-b:rgba(255,255,255,0.04);--j-line:rgba(255,255,255,0.2);--j-off:#8a8a91;--j-pill:rgba(0,0,0,0.42);
+  --j-glow-a:transparent;
+  --j-glow-b:transparent;--j-line:transparent;--j-pl:rgba(255,255,255,0.2);--j-pa:rgba(255,255,255,0.09);--j-pb:rgba(255,255,255,0.04);--j-off:#8a8a91;--j-pill:rgba(0,0,0,0.42);
   --n-drop:0 1px 2px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.45);
 }
 *{box-sizing:border-box}
@@ -759,6 +760,18 @@ footer{
 .mode-toggle,.qr-toggle,.list-menu-btn,.action-row input,.icon-btn,.qty-input,.status-action.stop,.status-action.start,button.primary,.scanner-card,.list-menu-dropdown,.confirm-panel{
   border-left-color:var(--j-ring-x);border-right-color:var(--j-ring-x);
 }
+/* ===== Luce che segue la curva del bordo (tema scuro): pseudo-elemento con maschera verticale ===== */
+.mode-toggle,.qr-toggle,.list-menu-btn,.icon-btn,.status-action,button.primary,.confirm-panel{position:relative}
+.fld{position:relative;flex:1;min-width:0;display:flex;border-radius:999px}
+.fld input{flex:1;min-width:0}
+.mode-toggle::before,.qr-toggle::before,.list-menu-btn::before,.icon-btn::before,.status-action::before,button.primary::before,
+.confirm-panel::before,.list-menu-dropdown::before,.fld::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:inset 0 var(--j-lw) 0 0 var(--j-pl),inset 0 1.5px 1.5px -0.5px var(--j-pa),inset 0 3px 4px -2px var(--j-pb),
+             inset 0 calc(-1 * var(--j-lw)) 0 0 var(--j-pl),inset 0 -1.5px 1.5px -0.5px var(--j-pa),inset 0 -3px 4px -2px var(--j-pb);
+  -webkit-mask-image:linear-gradient(180deg,#000 0,#000 6px,transparent 17px,transparent calc(100% - 17px),#000 calc(100% - 6px),#000 100%);
+          mask-image:linear-gradient(180deg,#000 0,#000 6px,transparent 17px,transparent calc(100% - 17px),#000 calc(100% - 6px),#000 100%);
+}
 </style>
 </head>
 <body>
@@ -911,7 +924,7 @@ footer{
   </div>
 
   <div class="action-row">
-    <input id="manualInput" type="text" inputmode="numeric" placeholder="Digita codice" aria-label="Digita codice">
+    <span class="fld"><input id="manualInput" type="text" inputmode="numeric" placeholder="Digita codice" aria-label="Digita codice"></span>
     <input id="manualQtyInput" class="qty-input" type="text" inputmode="numeric" pattern="[0-9]*" value="1" aria-label="Quantità" hidden>
     <button id="manualAddBtn" class="icon-btn" type="button" aria-label="Aggiungi" title="Aggiungi">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
