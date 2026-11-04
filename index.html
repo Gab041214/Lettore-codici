@@ -53,6 +53,8 @@
   --j-glow-a:#fff;
   --j-glow-b:#fff;
   --j-line:#fff;
+  --j-ring-x:rgba(40,40,60,0.26);
+  --j-lw:1px;
   --j-off:#a2a2b0;
   --j-pill:rgba(60,60,80,0.11);
   --n-drop:0 1px 2px rgba(30,30,50,0.14), 0 8px 20px rgba(30,30,50,0.10);
@@ -80,18 +82,18 @@
     --key-fill-active:#3a3a3c;
     --shadow:0 1px 3px rgba(0,0,0,0.5);
     --shadow-lg:0 8px 24px rgba(0,0,0,0.5);
-    --app-bg:linear-gradient(160deg,#14182a 0%,#1d1626 45%,#102228 100%);
-    --glass:rgba(120,120,135,0.30);
-    --glass-strong:rgba(150,150,165,0.42);
+    --app-bg:linear-gradient(160deg,#18181a 0%,#111113 55%,#0c0c0d 100%);
+    --glass:rgba(128,128,128,0.28);
+    --glass-strong:rgba(150,150,150,0.40);
     --glass-edge:rgba(255,255,255,0.22);
     --glass-edge-low:rgba(255,255,255,0.06);
     --glass-shadow:0 6px 18px rgba(0,0,0,0.45);
-    --row:rgba(120,120,135,0.22);
-    --j-fill:linear-gradient(180deg,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0.06) 12%,rgba(255,255,255,0.045) 50%,rgba(255,255,255,0.06) 88%,rgba(255,255,255,0.10) 100%);
+    --row:rgba(128,128,128,0.22);
+    --j-fill:linear-gradient(180deg,rgba(255,255,255,0.22) 0%,rgba(255,255,255,0.17) 14%,rgba(255,255,255,0.145) 50%,rgba(255,255,255,0.16) 86%,rgba(255,255,255,0.19) 100%);
     --j-fill-strong:linear-gradient(180deg,rgba(255,255,255,0.17) 0%,rgba(255,255,255,0.12) 12%,rgba(255,255,255,0.10) 50%,rgba(255,255,255,0.12) 88%,rgba(255,255,255,0.17) 100%);
-    --j-ring:rgba(255,255,255,0.11);
-    --j-glow-a:rgba(255,255,255,0.07);
-    --j-glow-b:rgba(255,255,255,0.035);--j-line:rgba(255,255,255,0.12);--j-off:#7c7c92;--j-pill:rgba(255,255,255,0.12);
+    --j-ring:rgba(255,255,255,0.16);--j-ring-x:rgba(255,255,255,0.035);--j-lw:0.5px;
+    --j-glow-a:rgba(255,255,255,0.09);
+    --j-glow-b:rgba(255,255,255,0.04);--j-line:rgba(255,255,255,0.2);--j-off:#8a8a91;--j-pill:rgba(0,0,0,0.42);
     --n-drop:0 1px 2px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.45);
   }
 }
@@ -112,18 +114,18 @@
   --key-fill-active:#3a3a3c;
   --shadow:0 1px 3px rgba(0,0,0,0.5);
   --shadow-lg:0 8px 24px rgba(0,0,0,0.5);
-  --app-bg:linear-gradient(160deg,#14182a 0%,#1d1626 45%,#102228 100%);
-  --glass:rgba(120,120,135,0.30);
-  --glass-strong:rgba(150,150,165,0.42);
+  --app-bg:linear-gradient(160deg,#18181a 0%,#111113 55%,#0c0c0d 100%);
+  --glass:rgba(128,128,128,0.28);
+  --glass-strong:rgba(150,150,150,0.40);
   --glass-edge:rgba(255,255,255,0.22);
   --glass-edge-low:rgba(255,255,255,0.06);
   --glass-shadow:0 6px 18px rgba(0,0,0,0.45);
-  --row:rgba(120,120,135,0.22);
-  --j-fill:linear-gradient(180deg,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0.06) 12%,rgba(255,255,255,0.045) 50%,rgba(255,255,255,0.06) 88%,rgba(255,255,255,0.10) 100%);
+  --row:rgba(128,128,128,0.22);
+  --j-fill:linear-gradient(180deg,rgba(255,255,255,0.22) 0%,rgba(255,255,255,0.17) 14%,rgba(255,255,255,0.145) 50%,rgba(255,255,255,0.16) 86%,rgba(255,255,255,0.19) 100%);
   --j-fill-strong:linear-gradient(180deg,rgba(255,255,255,0.17) 0%,rgba(255,255,255,0.12) 12%,rgba(255,255,255,0.10) 50%,rgba(255,255,255,0.12) 88%,rgba(255,255,255,0.17) 100%);
-  --j-ring:rgba(255,255,255,0.11);
-  --j-glow-a:rgba(255,255,255,0.07);
-  --j-glow-b:rgba(255,255,255,0.035);--j-line:rgba(255,255,255,0.12);--j-off:#7c7c92;--j-pill:rgba(255,255,255,0.12);
+  --j-ring:rgba(255,255,255,0.16);--j-ring-x:rgba(255,255,255,0.035);--j-lw:0.5px;
+  --j-glow-a:rgba(255,255,255,0.09);
+  --j-glow-b:rgba(255,255,255,0.04);--j-line:rgba(255,255,255,0.2);--j-off:#8a8a91;--j-pill:rgba(0,0,0,0.42);
   --n-drop:0 1px 2px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.45);
 }
 *{box-sizing:border-box}
@@ -715,9 +717,9 @@ footer{
   border-color:var(--j-ring);
   border-width:0.33px 1px;
   box-shadow:var(--n-drop),
-    inset 0 1px 0 0 var(--j-line), inset 0 2px 1.5px -1px var(--j-line),
+    inset 0 var(--j-lw) 0 0 var(--j-line), inset 0 2px 1.5px -1px var(--j-line),
     inset 0 2px 2px -1px var(--j-glow-a), inset 0 3px 4px -2px var(--j-glow-b),
-    inset 0 -1px 0 0 var(--j-line), inset 0 -2px 1.5px -1px var(--j-line),
+    inset 0 calc(-1 * var(--j-lw)) 0 0 var(--j-line), inset 0 -2px 1.5px -1px var(--j-line),
     inset 0 -2px 2px -1px var(--j-glow-a), inset 0 -3px 4px -2px var(--j-glow-b);
 }
 .list-menu-btn[aria-expanded="true"]{background:var(--j-fill-strong)}
@@ -734,9 +736,9 @@ footer{
   border-color:var(--j-ring);
   border-width:0.33px 1px;
   box-shadow:0 18px 48px rgba(20,20,40,0.28),
-    inset 0 1px 0 0 var(--j-line), inset 0 2px 1.5px -1px var(--j-line),
+    inset 0 var(--j-lw) 0 0 var(--j-line), inset 0 2px 1.5px -1px var(--j-line),
     inset 0 2px 2px -1px var(--j-glow-a), inset 0 4px 5px -2px var(--j-glow-b),
-    inset 0 -1px 0 0 var(--j-line), inset 0 -2px 1.5px -1px var(--j-line),
+    inset 0 calc(-1 * var(--j-lw)) 0 0 var(--j-line), inset 0 -2px 1.5px -1px var(--j-line),
     inset 0 -2px 2px -1px var(--j-glow-a), inset 0 -4px 5px -2px var(--j-glow-b);
 }
 /* ===== Pulsanti neutri: testo nero, niente blu, modalità attiva in pillola grigia ===== */
@@ -748,10 +750,14 @@ footer{
 .status-action.start,button.primary{
   background:var(--j-fill);color:var(--ink);border-style:solid;border-color:var(--j-ring);border-width:0.33px 1px;
   box-shadow:var(--n-drop),
-    inset 0 1px 0 0 var(--j-line), inset 0 2px 1.5px -1px var(--j-line),
+    inset 0 var(--j-lw) 0 0 var(--j-line), inset 0 2px 1.5px -1px var(--j-line),
     inset 0 2px 2px -1px var(--j-glow-a), inset 0 3px 4px -2px var(--j-glow-b),
-    inset 0 -1px 0 0 var(--j-line), inset 0 -2px 1.5px -1px var(--j-line),
+    inset 0 calc(-1 * var(--j-lw)) 0 0 var(--j-line), inset 0 -2px 1.5px -1px var(--j-line),
     inset 0 -2px 2px -1px var(--j-glow-a), inset 0 -3px 4px -2px var(--j-glow-b);
+}
+/* lati sinistro/destro: contorno separato (nel tema scuro quasi invisibile) */
+.mode-toggle,.qr-toggle,.list-menu-btn,.action-row input,.icon-btn,.qty-input,.status-action.stop,.status-action.start,button.primary,.scanner-card,.list-menu-dropdown,.confirm-panel{
+  border-left-color:var(--j-ring-x);border-right-color:var(--j-ring-x);
 }
 </style>
 </head>
