@@ -2,7 +2,7 @@
 // e un funzionamento offline di base (l'unica cosa che richiede rete è la
 // libreria ZXing caricata da CDN al primo avvio).
 
-const CACHE_NAME = 'scanner-codici-csv-v2';
+const CACHE_NAME = 'scanner-codici-csv-v3';
 const APP_SHELL = [
   './',
   './index.html',

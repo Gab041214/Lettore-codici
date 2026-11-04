@@ -38,6 +38,14 @@
   --key-fill-active:#d8d8de;
   --shadow:0 1px 3px rgba(0,0,0,0.06), 0 1px 1px rgba(0,0,0,0.04);
   --shadow-lg:0 8px 24px rgba(0,0,0,0.10);
+  /* Vetro (stile iOS 27) */
+  --app-bg:linear-gradient(160deg,#e8eefc 0%,#f3eefa 45%,#e6f2f6 100%);
+  --glass:rgba(255,255,255,0.58);
+  --glass-strong:rgba(255,255,255,0.82);
+  --glass-edge:rgba(255,255,255,0.9);
+  --glass-edge-low:rgba(0,0,0,0.07);
+  --glass-shadow:0 6px 18px rgba(30,40,80,0.10), 0 1px 2px rgba(30,40,80,0.08);
+  --row:rgba(255,255,255,0.7);
   --mono: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
   --r-lg:20px;
@@ -62,6 +70,13 @@
     --key-fill-active:#3a3a3c;
     --shadow:0 1px 3px rgba(0,0,0,0.5);
     --shadow-lg:0 8px 24px rgba(0,0,0,0.5);
+    --app-bg:linear-gradient(160deg,#14182a 0%,#1d1626 45%,#102228 100%);
+    --glass:rgba(120,120,135,0.30);
+    --glass-strong:rgba(150,150,165,0.42);
+    --glass-edge:rgba(255,255,255,0.22);
+    --glass-edge-low:rgba(255,255,255,0.06);
+    --glass-shadow:0 6px 18px rgba(0,0,0,0.45);
+    --row:rgba(120,120,135,0.22);
   }
 }
 :root[data-theme="dark"]{
@@ -81,18 +96,24 @@
   --key-fill-active:#3a3a3c;
   --shadow:0 1px 3px rgba(0,0,0,0.5);
   --shadow-lg:0 8px 24px rgba(0,0,0,0.5);
+  --app-bg:linear-gradient(160deg,#14182a 0%,#1d1626 45%,#102228 100%);
+  --glass:rgba(120,120,135,0.30);
+  --glass-strong:rgba(150,150,165,0.42);
+  --glass-edge:rgba(255,255,255,0.22);
+  --glass-edge-low:rgba(255,255,255,0.06);
+  --glass-shadow:0 6px 18px rgba(0,0,0,0.45);
+  --row:rgba(120,120,135,0.22);
 }
 *{box-sizing:border-box}
-html,body{height:100%}
 body{
-  background:var(--bg);
+  background-color:var(--bg);
+  background-image:var(--app-bg);
+  background-attachment:fixed;
   color:var(--ink);
   font-family:var(--sans);
   margin:0;
   padding-inline:16px;
   padding-block:24px;
-  padding-top:calc(24px + env(safe-area-inset-top, 0px));
-  padding-bottom:calc(24px + env(safe-area-inset-bottom, 0px));
   min-height:100%;
   -webkit-font-smoothing:antialiased;
 }
@@ -108,10 +129,11 @@ h1{
 .tagline{color:var(--ink-soft);font-size:0.92rem;margin:0;line-height:1.4}
 
 .scanner-card{
-  background:var(--surface);
-  border-radius:var(--r-lg);
+  background:var(--glass);
+  border:1px solid var(--glass-edge);
+  border-radius:28px;
   overflow:hidden;
-  box-shadow:var(--shadow);
+  box-shadow:var(--glass-shadow);
 }
 .video-box{
   position:relative;
@@ -160,14 +182,40 @@ video{
   gap:10px;color:#c9cabf;text-align:center;padding:20px;
 }
 .video-placeholder svg{opacity:0.6}
+.video-placeholder{cursor:pointer}
+.video-placeholder .start-hint{
+  font-size:0.78rem;font-weight:600;color:#fff;
+  background:rgba(255,255,255,0.16);
+  border:1px solid rgba(255,255,255,0.22);
+  padding:6px 14px;border-radius:999px;
+}
 .status-bar{
   display:flex;align-items:center;justify-content:space-between;
-  gap:10px;padding:12px 16px;border-top:1px solid var(--line);
-  font-size:0.85rem;color:var(--ink-soft);
+  gap:10px;padding:8px 8px 8px 18px;min-height:52px;
+  border-top:1px solid var(--glass-edge-low);
+  font-size:0.86rem;color:var(--ink-soft);
+  backdrop-filter:blur(22px) saturate(1.7);
+  -webkit-backdrop-filter:blur(22px) saturate(1.7);
 }
 .status-dot{width:8px;height:8px;border-radius:50%;background:var(--ink-soft);flex-shrink:0}
 .status-dot.live{background:#34c759;box-shadow:0 0 0 4px color-mix(in srgb, #34c759 22%, transparent)}
 .status-dot.err{background:var(--danger)}
+.status-action{
+  flex-shrink:0;
+  height:36px;
+  padding:0 16px;
+  font-size:0.82rem;
+  font-weight:700;
+  gap:7px;
+}
+.status-action.start{
+  background:var(--accent);
+  color:var(--accent-ink);
+  border-color:rgba(255,255,255,0.35);
+  box-shadow:0 3px 10px color-mix(in srgb, var(--accent) 40%, transparent), inset 0 1px 0 rgba(255,255,255,0.35);
+}
+.status-action.stop{color:var(--ink)}
+.status-action.stop svg{color:var(--danger)}
 .status-left{display:flex;align-items:center;gap:8px;min-width:0}
 .status-left span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
@@ -175,21 +223,30 @@ button{
   font-family:var(--sans);
   font-size:0.95rem;
   font-weight:600;
-  border-radius:var(--r-md);
+  border-radius:999px;
   padding:12px 20px;
-  border:none;
-  background:var(--surface-alt);
+  border:1px solid var(--glass-edge);
+  background:var(--glass);
   color:var(--ink);
   cursor:pointer;
   display:inline-flex;
   align-items:center;
   gap:8px;
-  box-shadow:var(--shadow);
+  box-shadow:var(--glass-shadow);
   transition:transform 0.08s ease, background 0.15s ease, opacity 0.15s ease;
 }
 button:active{transform:scale(0.96); opacity:0.85}
-button.primary{background:var(--accent);color:var(--accent-ink)}
-button.danger{background:color-mix(in srgb, var(--danger) 14%, var(--surface-alt));color:var(--danger)}
+button.primary{
+  background:var(--accent);
+  color:var(--accent-ink);
+  border-color:rgba(255,255,255,0.35);
+  box-shadow:0 3px 10px color-mix(in srgb, var(--accent) 40%, transparent), inset 0 1px 0 rgba(255,255,255,0.35);
+}
+button.danger{
+  background:color-mix(in srgb, var(--danger) 16%, transparent);
+  color:var(--danger);
+  border-color:color-mix(in srgb, var(--danger) 24%, transparent);
+}
 button:disabled{opacity:0.4;cursor:not-allowed}
 button:disabled:active{transform:none}
 button svg{flex-shrink:0}
@@ -199,30 +256,34 @@ button svg{flex-shrink:0}
   gap:8px;
   align-items:stretch;
 }
-.controls-row > .mode-toggle,
-.controls-row > .secondary-row{
-  flex:1 1 50%;
+.controls-row > .mode-toggle{
+  flex:1.4 1 0;
   min-width:0;
 }
 
 .mode-toggle{
   display:flex;
-  background:var(--surface-alt);
-  border-radius:var(--r-md);
-  padding:3px;
+  height:48px;
+  background:var(--glass);
+  border:1px solid var(--glass-edge);
+  border-radius:999px;
+  padding:4px;
   gap:2px;
+  box-shadow:var(--glass-shadow), inset 0 1px 0 var(--glass-edge);
+  backdrop-filter:blur(22px) saturate(1.7);
+  -webkit-backdrop-filter:blur(22px) saturate(1.7);
 }
 .mode-toggle button{
   flex:1;
   min-width:0;
-  height:35px;
+  height:100%;
   border:none;
-  border-radius:11px;
+  border-radius:999px;
   padding:0 4px;
   background:transparent;
   color:var(--ink-soft);
   font-weight:600;
-  font-size:0.74rem;
+  font-size:0.8rem;
   justify-content:center;
   gap:4px;
   box-shadow:none;
@@ -230,14 +291,13 @@ button svg{flex-shrink:0}
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.mode-toggle button svg{width:13px;height:13px;flex-shrink:0}
 .mode-toggle button[aria-pressed="true"]{
-  background:var(--surface);
+  background:var(--glass-strong);
   color:var(--accent);
-  box-shadow:var(--shadow);
+  box-shadow:0 2px 6px rgba(30,40,80,0.12), inset 0 1px 0 var(--glass-edge);
 }
 
-.secondary-row{display:flex;gap:6px;align-items:stretch;min-width:0}
+.secondary-row{display:contents}
 .edit-standalone{
   flex:1;
   min-width:0;
@@ -257,69 +317,79 @@ button svg{flex-shrink:0}
   color:var(--edit-ink);
 }
 .qr-toggle{
-  flex:0 0 auto;
-  width:41px;
-  height:41px;
+  flex:0 0 48px;
+  width:48px;
+  height:48px;
   padding:0;
+  border-radius:50%;
   justify-content:center;
-  background:var(--surface-alt);
+  background:var(--glass);
   color:var(--ink-soft);
+  backdrop-filter:blur(22px) saturate(1.7);
+  -webkit-backdrop-filter:blur(22px) saturate(1.7);
 }
-.qr-toggle svg{width:17px;height:17px}
+.qr-toggle svg{width:20px;height:20px}
 .qr-toggle .qr-slash{opacity:0;transition:opacity 0.15s ease}
 .qr-toggle[aria-pressed="true"]{
-  background:color-mix(in srgb, var(--danger) 16%, var(--surface-alt));
+  background:color-mix(in srgb, var(--danger) 16%, transparent);
   color:var(--danger);
+  border-color:color-mix(in srgb, var(--danger) 24%, transparent);
 }
 .qr-toggle[aria-pressed="true"] .qr-slash{opacity:1}
 
-.list-menu{position:relative;flex:1;min-width:0;display:flex;align-items:stretch}
+.list-menu{position:relative;flex:1.2 1 0;min-width:0;display:flex;align-items:stretch}
 .list-menu-btn{
   width:100%;
   min-width:0;
-  height:41px;
-  background:var(--surface-alt);
+  height:48px;
   color:var(--ink-soft);
   justify-content:center;
-  gap:4px;
-  padding:0 6px;
-  font-size:0.74rem;
+  gap:6px;
+  padding:0 10px;
+  font-size:0.8rem;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
+  backdrop-filter:blur(22px) saturate(1.7);
+  -webkit-backdrop-filter:blur(22px) saturate(1.7);
 }
-.list-menu-btn svg{width:13px;height:13px;flex-shrink:0}
+.list-menu-btn svg{width:17px;height:17px;flex-shrink:0}
 .list-menu-btn[aria-expanded="true"]{
-  background:var(--surface);
+  background:var(--glass-strong);
   color:var(--accent);
-  box-shadow:var(--shadow);
 }
 .list-menu-dropdown{
   position:absolute;
   top:calc(100% + 8px);
   right:0;
-  min-width:190px;
-  background:var(--surface);
-  border-radius:var(--r-md);
-  box-shadow:var(--shadow-lg);
+  min-width:230px;
+  background:var(--glass-strong);
+  border:1px solid var(--glass-edge);
+  border-radius:26px;
+  box-shadow:0 14px 40px rgba(0,0,0,0.22), inset 0 1px 0 var(--glass-edge);
+  backdrop-filter:blur(30px) saturate(1.8);
+  -webkit-backdrop-filter:blur(30px) saturate(1.8);
   padding:6px;
   display:flex;
   flex-direction:column;
   gap:2px;
   z-index:60;
 }
+.list-menu-sep{height:1px;background:var(--glass-edge-low);margin:0 14px}
 .list-menu-dropdown[hidden]{display:none}
 .list-menu-item{
   width:100%;
   justify-content:flex-start;
   gap:10px;
   background:none;
+  border:none;
   box-shadow:none;
   color:var(--ink);
-  font-size:0.9rem;
+  font-size:0.95rem;
   font-weight:600;
-  padding:10px 12px;
-  border-radius:10px;
+  height:48px;
+  padding:0 14px;
+  border-radius:20px;
 }
 .list-menu-item:disabled{opacity:0.4}
 .list-menu-item.danger-item{color:var(--danger)}
@@ -328,7 +398,9 @@ button svg{flex-shrink:0}
 .modal-overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.42);
+  background:rgba(0,0,0,0.38);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -341,20 +413,30 @@ button svg{flex-shrink:0}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
 .confirm-panel{
-  padding:20px;
+  padding:22px 20px 20px;
   display:flex;
   flex-direction:column;
   gap:14px;
-  background:var(--surface);
-  border-radius:var(--r-lg);
-  box-shadow:0 20px 50px rgba(0,0,0,0.28);
+  background:var(--glass-strong);
+  border:1px solid var(--glass-edge);
+  border-radius:34px;
+  backdrop-filter:blur(30px) saturate(1.8);
+  -webkit-backdrop-filter:blur(30px) saturate(1.8);
+  box-shadow:0 24px 60px rgba(0,0,0,0.30), inset 0 1px 0 var(--glass-edge);
   width:100%;
   max-width:360px;
   max-height:calc(100vh - 40px);
   overflow-y:auto;
 }
 .confirm-panel .cp-code{display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center}
-.confirm-panel .cp-code-label{font-size:0.72rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em}
+.confirm-panel .cp-code-label{font-size:0.72rem;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.05em}
+.fmt-tag{
+  font-size:0.68rem;font-weight:700;
+  padding:3px 9px;border-radius:999px;
+  background:color-mix(in srgb, var(--accent) 16%, transparent);
+  color:var(--accent);
+}
+.fmt-tag:empty{display:none}
 .confirm-panel .cp-code-value{
   display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;
 }
@@ -362,7 +444,7 @@ button svg{flex-shrink:0}
   font-family:var(--mono);font-size:1.1rem;font-weight:600;word-break:break-all;
 }
 .qty-display-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
-.qty-display-label{font-size:0.72rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em}
+.qty-display-label{font-size:0.72rem;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.05em}
 .qty-display{
   font-family:var(--mono);
   font-variant-numeric:tabular-nums;
@@ -376,8 +458,8 @@ button svg{flex-shrink:0}
 .keypad{
   display:grid;
   grid-template-columns:repeat(3, 1fr);
-  gap:12px;
-  max-width:270px;
+  gap:10px;
+  max-width:238px;
   margin:0 auto;
   width:100%;
 }
@@ -392,24 +474,30 @@ button svg{flex-shrink:0}
   width:100%;
   height:auto;
   border-radius:50%;
-  background:var(--key-fill);
+  background:var(--row);
+  border:1px solid var(--glass-edge-low);
+  box-shadow:inset 0 1px 0 var(--glass-edge);
   color:var(--ink);
 }
 .keypad .kp-key:active{background:var(--key-fill-active)}
 .keypad .kp-clear{color:var(--danger);font-size:1.05rem;font-weight:600}
 .keypad .kp-back{font-size:1.2rem}
-.confirm-actions{display:flex;gap:10px;flex-wrap:wrap}
-.confirm-actions button{flex:1;justify-content:center;min-width:130px}
+.confirm-actions{display:flex;flex-direction:column;gap:8px}
+.confirm-actions button{flex:none;width:100%;min-height:48px;justify-content:center;font-size:0.92rem;font-weight:700}
 
 .qty-error{
   font-size:0.8rem;color:var(--danger);min-height:1.1em;margin:0;text-align:center;
 }
 .qty-error:empty{visibility:hidden}
 
-.edit-panel{background:var(--surface)}
 .edit-panel .cp-code-label{color:var(--edit)}
-button.edit-save{background:var(--edit);color:var(--edit-ink)}
-button.ghost{background:var(--surface-alt);color:var(--ink-soft)}
+button.edit-save{
+  background:var(--edit);
+  color:var(--edit-ink);
+  border-color:rgba(255,255,255,0.35);
+  box-shadow:0 3px 10px color-mix(in srgb, var(--edit) 40%, transparent), inset 0 1px 0 rgba(255,255,255,0.35);
+}
+button.ghost{background:var(--row);color:var(--ink-soft);border-color:var(--glass-edge-low)}
 
 .clear-message{
   margin:0;
@@ -427,44 +515,51 @@ button.ghost{background:var(--surface-alt);color:var(--ink-soft)}
   min-width:0;
   font-family:var(--sans);
   font-size:1rem;
-  padding:12px 14px;
-  border-radius:var(--r-md);
-  border:none;
-  background:var(--surface);
+  height:48px;
+  padding:0 20px;
+  border-radius:999px;
+  border:1px solid var(--glass-edge);
+  background:var(--glass);
   color:var(--ink);
-  box-shadow:var(--shadow);
+  box-shadow:var(--glass-shadow), inset 0 1px 0 var(--glass-edge);
+  backdrop-filter:blur(22px) saturate(1.7);
+  -webkit-backdrop-filter:blur(22px) saturate(1.7);
 }
 .action-row input::placeholder{color:var(--ink-soft)}
 .action-row input:focus{outline:2px solid var(--accent);outline-offset:1px}
 .icon-btn{
-  flex:0 0 auto;
-  width:44px;
+  flex:0 0 48px;
+  width:48px;
+  height:48px;
   padding:0;
+  border-radius:50%;
   justify-content:center;
   gap:0;
+  color:var(--accent);
 }
 .qty-input{
   flex:0 0 auto;
-  width:38px;
+  width:56px;
+  height:48px;
   min-width:0;
   text-align:center;
   font-family:var(--mono);
   font-variant-numeric:tabular-nums;
   font-weight:700;
   font-size:1rem;
-  padding:12px 4px;
-  border-radius:var(--r-md);
-  border:none;
-  background:var(--surface);
+  padding:0 4px;
+  border-radius:999px;
+  border:1px solid var(--glass-edge);
+  background:var(--glass);
   color:var(--ink);
-  box-shadow:var(--shadow);
+  box-shadow:var(--glass-shadow), inset 0 1px 0 var(--glass-edge);
 }
 .qty-input:focus{outline:2px solid var(--accent);outline-offset:1px}
 .qty-input[hidden]{display:none}
 
 section.list-card{
   background:var(--surface);
-  border-radius:var(--r-lg);
+  border-radius:28px;
   padding:18px;
   display:flex;
   flex-direction:column;
@@ -590,14 +685,8 @@ footer{
 
   <div class="controls-row">
     <div class="mode-toggle" role="group" aria-label="Modalità di lettura">
-      <button id="modeScannerBtn" type="button" aria-pressed="true">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h7l-1 8 11-14h-7l1-8z"/></svg>
-        Scanner
-      </button>
-      <button id="modeManualBtn" type="button" aria-pressed="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
-        Manuale
-      </button>
+      <button id="modeScannerBtn" type="button" aria-pressed="true">Scanner</button>
+      <button id="modeManualBtn" type="button" aria-pressed="false">Manuale</button>
     </div>
 
     <div class="secondary-row">
@@ -613,12 +702,9 @@ footer{
           <line class="qr-slash" x1="2.5" y1="21.5" x2="21.5" y2="2.5" stroke-linecap="round" stroke-width="2.5"/>
         </svg>
       </button>
-      <button id="toggleBtn" class="primary qr-toggle" type="button" aria-label="Avvia fotocamera" title="Avvia fotocamera">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-      </button>
       <div class="list-menu">
         <button id="listMenuBtn" class="list-menu-btn" type="button" aria-haspopup="true" aria-expanded="false">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="4.5" cy="6" r="1.2" fill="currentColor"/><circle cx="4.5" cy="12" r="1.2" fill="currentColor"/><circle cx="4.5" cy="18" r="1.2" fill="currentColor"/><path d="M9.5 6H21M9.5 12H21M9.5 18H21"/></svg>
           Elenco
         </button>
         <div id="listMenuDropdown" class="list-menu-dropdown" hidden>
@@ -626,6 +712,7 @@ footer{
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
             Esporta CSV
           </button>
+          <div class="list-menu-sep" role="separator"></div>
           <button id="clearBtn" class="list-menu-item danger-item" type="button" disabled>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
             Svuota elenco
@@ -639,9 +726,10 @@ footer{
     <div class="video-box">
       <video id="video" playsinline muted></video>
       <div id="reticle" class="reticle" hidden><div class="scan-line"></div></div>
-      <div id="placeholder" class="video-placeholder">
+      <div id="placeholder" class="video-placeholder" role="button" tabindex="0" aria-label="Avvia fotocamera">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg>
         <span>Fotocamera non attiva</span>
+        <span class="start-hint">Tocca per avviare</span>
       </div>
     </div>
     <div class="status-bar">
@@ -649,7 +737,7 @@ footer{
         <span id="statusDot" class="status-dot"></span>
         <span id="statusText">Fotocamera spenta</span>
       </div>
-      <span id="fps" style="font-family:var(--mono)"></span>
+      <button id="statusActionBtn" class="status-action start" type="button" aria-label="Avvia fotocamera" title="Avvia fotocamera"></button>
     </div>
   </div>
 
@@ -767,8 +855,7 @@ footer{
   var reticle = document.getElementById('reticle');
   var statusDot = document.getElementById('statusDot');
   var statusText = document.getElementById('statusText');
-  var fpsEl = document.getElementById('fps');
-  var toggleBtn = document.getElementById('toggleBtn');
+  var statusActionBtn = document.getElementById('statusActionBtn');
   var manualInput = document.getElementById('manualInput');
   var manualQtyInput = document.getElementById('manualQtyInput');
   var manualAddBtn = document.getElementById('manualAddBtn');
@@ -825,11 +912,11 @@ footer{
   var pendingScan = null;         // {code, format} awaiting confirmation in modalità manuale
   var pendingEdit = null;         // entry in codes[] in fase di modifica
   var editViaList = false;        // true se il pannello di modifica è stato aperto con lo swipe dall'elenco
+  var editCooldownUntil = 0;      // throttle for modalità modifica (evita riletture accidentali)
+  var EDIT_COOLDOWN_MS = 1300;
   var lastSeenCode = null;        // codice attualmente "inquadrato" in modalità Scanner (evita di ricontarlo)
   var missingSince = 0;           // performance.now() da quando nessun codice viene più rilevato
   var RESCAN_GRACE_MS = 450;      // tempo di mancata lettura prima di considerare il codice uscito dall'inquadratura
-  var editCooldownUntil = 0;      // throttle for modalità modifica (evita riletture accidentali)
-  var EDIT_COOLDOWN_MS = 1300;
 
   function setMode(next){
     mode = next;
@@ -1410,21 +1497,16 @@ footer{
 
   // ---- Scanning ----
 
-  var lastFrameTime = 0, frameCount = 0, fpsWindowStart = 0;
-
-  function startFpsCounter(){
-    fpsWindowStart = performance.now();
-    frameCount = 0;
+  // Pulsante Avvia / Ferma nella barra di stato
+  var ICON_PLAY = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg>';
+  var ICON_STOP = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg>';
+  function setCameraButton(on){
+    statusActionBtn.className = 'status-action ' + (on ? 'stop' : 'start');
+    statusActionBtn.innerHTML = (on ? ICON_STOP + 'Ferma' : ICON_PLAY + 'Avvia');
+    statusActionBtn.setAttribute('aria-label', on ? 'Ferma fotocamera' : 'Avvia fotocamera');
+    statusActionBtn.title = on ? 'Ferma fotocamera' : 'Avvia fotocamera';
   }
-  function tickFps(){
-    frameCount++;
-    var now = performance.now();
-    if (now - fpsWindowStart > 1000){
-      fpsEl.textContent = Math.round(frameCount * 1000 / (now - fpsWindowStart)) + ' fps';
-      fpsWindowStart = now;
-      frameCount = 0;
-    }
-  }
+  setCameraButton(false);
 
   function stopScanning(){
     scanning = false;
@@ -1442,11 +1524,8 @@ footer{
     video.srcObject = null;
     placeholder.hidden = false;
     reticle.hidden = true;
-    fpsEl.textContent = '';
     setStatus('', 'Fotocamera spenta');
-    toggleBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';
-    toggleBtn.setAttribute('aria-label', 'Avvia fotocamera');
-    toggleBtn.title = 'Avvia fotocamera';
+    setCameraButton(false);
   }
 
   function handleDecoded(result){
@@ -1471,11 +1550,9 @@ footer{
       if (!entry){
         editCooldownUntil = now2 + EDIT_COOLDOWN_MS;
         showToast('Codice non presente in elenco: ' + text);
-        tickFps();
         return;
       }
       showEditPanel(entry);
-      tickFps();
       return;
     }
 
@@ -1483,7 +1560,6 @@ footer{
       // Ignora nuove letture finché la quantità corrente non è confermata o scartata.
       if (pendingScan) return;
       showConfirmPanel({ code: text, format: formatName });
-      tickFps();
       return;
     }
 
@@ -1491,10 +1567,9 @@ footer{
     // finché resta ininterrottamente inquadrato. Si riarma (vedi il callback di
     // decodeFromConstraints) solo dopo che la fotocamera smette di rilevarlo
     // per un breve periodo, segno che è uscito dall'inquadratura.
-    if (text === lastSeenCode){ tickFps(); return; }
+    if (text === lastSeenCode){ return; }
     lastSeenCode = text;
     addCode(text, formatName, 1);
-    tickFps();
   }
 
   function startScanning(){
@@ -1546,10 +1621,7 @@ footer{
       placeholder.hidden = true;
       reticle.hidden = false;
       setStatus('live', 'In ascolto…');
-      startFpsCounter();
-      toggleBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
-      toggleBtn.setAttribute('aria-label', 'Ferma fotocamera');
-      toggleBtn.title = 'Ferma fotocamera';
+      setCameraButton(true);
     }).catch(function(err){
       console.error(err);
       scanning = false;
@@ -1558,18 +1630,27 @@ footer{
       if (err && err.name === 'NotFoundError') msg = 'Nessuna fotocamera trovata';
       setStatus('err', msg);
       showToast(msg);
-      toggleBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';
-      toggleBtn.setAttribute('aria-label', 'Avvia fotocamera');
-      toggleBtn.title = 'Avvia fotocamera';
+      setCameraButton(false);
     });
   }
 
-  toggleBtn.addEventListener('click', function(){
+  statusActionBtn.addEventListener('click', function(){
     if (scanning){
       stopScanning();
     } else {
       startScanning();
     }
+  });
+
+  // Toccando il riquadro "Fotocamera non attiva" si avvia la fotocamera.
+  // Con la fotocamera accesa il segnaposto è nascosto: l'unico modo per fermarla
+  // è il pulsante "Ferma", così un tocco sull'inquadratura non la spegne per errore.
+  function startFromPlaceholder(){
+    if (!scanning && !statusActionBtn.disabled){ startScanning(); }
+  }
+  placeholder.addEventListener('click', startFromPlaceholder);
+  placeholder.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); startFromPlaceholder(); }
   });
 
   function stopScanningKeepUI(){
@@ -1579,7 +1660,7 @@ footer{
 
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
     setStatus('err', 'Fotocamera non supportata da questo browser');
-    toggleBtn.disabled = true;
+    statusActionBtn.disabled = true;
   }
 
   renderRows();
